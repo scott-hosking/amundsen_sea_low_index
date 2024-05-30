@@ -148,10 +148,10 @@ def _cli_get_era5_monthly():
         area_dict = None
     else:
         area_dict = {
-            "north": args.area_bounds[0],
-            "west": args.area_bounds[1],
-            "south": args.area_bounds[2],
-            "east": args.area_bounds[3],
+            "north": args.area[0],
+            "west": args.area[1],
+            "south": args.area[2],
+            "east": args.area[3],
         }
 
     vars = list(args.vars.split(","))
