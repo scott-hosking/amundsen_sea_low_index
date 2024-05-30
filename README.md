@@ -95,6 +95,14 @@ Most of the package has docstrings in the source code, so try running `help()` o
 ## Contributing
 We welcome contributions and improvements to this package!
 
-Please submit bug reports and feature requests [on the GitHub repo](https://github.com/scotthosking/amundsen-sea-low-index/issues/new).
+Please submit bug reports and feature requests as issues [on the GitHub repo](https://github.com/scotthosking/amundsen-sea-low-index/issues/new).
 
-For source code contributions (even just to the readme or documentation) please fork the repo on GitHub, make your changes there and open a pull request against this repository.
+### Development tips
+
+When making changes to the source code (including to the docs):
+
+1. Fork this repository on GitHub,
+1. Clone the package to your computer: `git clone https://github.com/<your-username>/amundsen-sea-low-index`
+1. Inside a virtual environment, install the package as an editable pip install, including the optional development dependencies: `pip install -e amundsen-sea-low-index[tests,docs,dev]` (where `amundsen-sea-low-index` is the relative path to the cloned repository),
+1. Make your changes and run the tests using pytest: `pytest` and/or test the docs build using `jupyter-book build docs/`
+1. Commit and push your changes to GitHub and open a pull request.
