@@ -28,6 +28,7 @@ dependencies = [
     "pandas",
     "scikit-image",
     "xarray",
+    "jinja2"
 ]
 
 [project.urls]
