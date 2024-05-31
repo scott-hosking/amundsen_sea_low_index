@@ -288,7 +288,7 @@ class ASLICalculator:
         # Set up jinja
         from jinja2 import Environment, PackageLoader, select_autoescape
 
-        env = Environment(loader=PackageLoader("asli", "templates"), autoescape=select_autoescape())
+        env = Environment(loader=PackageLoader("asli"), autoescape=select_autoescape())
         template = env.get_template("asli_data.csv.template")
 
         header = template.render(
