@@ -31,6 +31,12 @@ dependencies = [
     "jinja2"
 ]
 
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+asli = ["templates/asli_data.csv.template"]
+
 [project.urls]
 Source = "https://github.com/scotthosking/amundsen-sea-low-index"
 Bug_Tracker = "https://github.com/scotthosking/amundsen-sea-low-index/issues"
