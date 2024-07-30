@@ -17,7 +17,7 @@ from .params import ASL_REGION, CALCULATION_VERSION, SOFTWARE_VERSION, MASK_THRE
 from .plot import plot_lows
 from .utils import tqdm_joblib
 
-logging.getLogger("asli").addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)
 
 
 def asl_sector_mean(
@@ -206,7 +206,7 @@ class ASLICalculator:
         """
 
         if self.land_sea_mask is None:
-            logging.error("Must read in land-sea mask before mean sea level data.")
+            logger.error("Must read in land-sea mask before mean sea level data.")
             return
 
         raw_msl_data_path = os.path.join(self.data_dir, self.msl_pattern)
