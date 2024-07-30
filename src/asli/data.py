@@ -155,8 +155,8 @@ def _cli_get_era5_monthly():
             "east": args.area[3],
         }
 
-    vars = list(args.vars.split(","))
-    logger.info(f"variables to download: {vars}")
+    vars = list(filter(None, args.vars.split(",")))
+    logger.info(f"variables to download: {', '.join(vars)}")
 
     get_era5_monthly(
         data_dir=Path(args.datadir),
