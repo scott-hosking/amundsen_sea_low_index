@@ -208,7 +208,7 @@ def get_land_sea_mask(
 def _get_request_area(area: dict, border: float) -> dict:
     if area:
         logger.info(
-            f"Area of N:{area['north']}, W:{area['west']}, S:{area['south']}, E:{area['east']}specified."
+            f"Area of N:{area['north']}, W:{area['west']}, S:{area['south']}, E:{area['east']} specified."
         )
         if border is None:
             request_area = area
