@@ -9,7 +9,7 @@ import cdsapi
 
 from .params import ASL_REGION
 
-logging.getLogger("asli").addHandler(logging.NullHandler())
+logger = logging.getLogger(__name__)
 
 
 class CDSDownloader:
@@ -21,17 +21,17 @@ class CDSDownloader:
         self.output_path = Path(self.data_dir, output_filename)
 
         if area:
-            logging.info(f"Downloading with bounding area: {area}")
+            logger.info(f"Downloading with bounding area: {area}")
             self.request_params.update(
                 {"area": [area["north"], area["west"], area["south"], area["east"]]}
             )
         else:
-            logging.info(
+            logger.info(
                 "No bounding area specified, downloading with no bounding area, i.e. whole earth."
             )
 
     def download(self):
-        logging.debug(f"request_params: {self.request_params}")
+        logger.debug(f"request_params: {self.request_params}")
         c = cdsapi.Client()
         c.retrieve(
             "reanalysis-era5-single-levels-monthly-means",
@@ -145,7 +145,7 @@ def _cli_get_era5_monthly():
     args = parser.parse_args()
 
     if args.e is True:
-        logging.info("'-e' flag specified. Will download whole Earth.")
+        logger.info("'-e' flag specified. Will download whole Earth.")
         area_dict = None
     else:
         area_dict = {
@@ -156,7 +156,7 @@ def _cli_get_era5_monthly():
         }
 
     vars = list(args.vars.split(","))
-    logging.info(f"variables to download: {vars}")
+    logger.info(f"variables to download: {vars}")
 
     get_era5_monthly(
         data_dir=Path(args.datadir),
@@ -207,20 +207,20 @@ def get_land_sea_mask(
 
 def _get_request_area(area: dict, border: float) -> dict:
     if area:
-        logging.info(
+        logger.info(
             f"Area of N:{area['north']}, W:{area['west']}, S:{area['south']}, E:{area['east']}specified."
         )
         if border is None:
             request_area = area
         else:
-            logging.info(f"Border of {border} specified.")
+            logger.info(f"Border of {border} specified.")
             request_area = {
                 "north": area["north"] + border,
                 "south": area["south"] - border,
                 "east": area["east"] + border,
                 "west": area["west"] - border,
             }
-        logging.info(
+        logger.info(
             f"Requesting: N:{area['north']}, W:{area['west']}, S:{area['south']}, E:{area['east']}."
         )
         return request_area
@@ -264,7 +264,7 @@ def _get_cli_lsm_args():
     args = parser.parse_args()
 
     if args.e is True:
-        logging.info("'-e' flag specified. Will download whole Earth.")
+        logger.info("'-e' flag specified. Will download whole Earth.")
         args.area_dict = None
         args.border = None
     else:
