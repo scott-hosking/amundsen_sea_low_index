@@ -31,6 +31,7 @@ class CDSDownloader:
             )
 
     def download(self):
+        logging.debug(f"request_params: {self.request_params}")
         c = cdsapi.Client()
         c.retrieve(
             "reanalysis-era5-single-levels-monthly-means",
