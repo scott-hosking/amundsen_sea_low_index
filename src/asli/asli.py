@@ -202,14 +202,10 @@ class ASLICalculator:
         # Check is the path is an s3 bucket
         if self.data_dir.startswith("s3://"):
             # Using utility function to set up s3 connection with the config file
-            s3_connection = configure_s3_bucket(
-                self.s3_config_filepath, self.s3_config_filename
-            )
-            
             # Passing s3 connection and specifying file bucket 
             s3_lsm_bucket = s3fs.S3Map(
                 os.path.join(self.data_dir, self.mask_filename),
-                s3 = s3_connection
+                s3 = configure_s3_bucket(self.s3_config_filepath, self.s3_config_filename)
             )
 
             # Using open_zarr to read in files, ie. we are expecting .zarr NOT .nc
@@ -232,8 +228,19 @@ class ASLICalculator:
             logging.error("Must read in land-sea mask before mean sea level data.")
             return
 
-        raw_msl_data_path = os.path.join(self.data_dir, self.msl_pattern)
-        self.raw_msl_data = xr.open_mfdataset(raw_msl_data_path).msl
+        if self.data_dir.startswith("s3://"):
+            s3_msl_bucket = s3fs.S3Map(
+                os.path.join(self.data_dir, self.msl_pattern),
+                s3 = configure_s3_bucket(self.s3_config_filepath, self.s3_config_filename)
+            )
+
+            # Using open_zarr to read in files, ie. we are expecting .zarr NOT .nc
+            self.raw_msl_data = xr.open_zarr(
+                s3_msl_bucket, consolidated=True
+            )
+        else:        
+            raw_msl_data_path = os.path.join(self.data_dir, self.msl_pattern)
+            self.raw_msl_data = xr.open_mfdataset(raw_msl_data_path).msl
 
         # expver attr is only present in mixed era5/era5T data? https://confluence.ecmwf.int/pages/viewpage.action?pageId=171414041
         if hasattr(self.raw_msl_data, "expver") and self.raw_msl_data.expver.size > 1:
