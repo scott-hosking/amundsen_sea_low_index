@@ -4,6 +4,7 @@ import argparse
 import datetime
 import logging
 import os
+import s3fs
 from pathlib import Path
 from typing import Mapping
 
