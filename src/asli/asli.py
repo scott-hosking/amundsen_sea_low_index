@@ -4,6 +4,7 @@ import argparse
 import datetime
 import logging
 import os
+import s3fs
 from pathlib import Path
 from typing import Mapping
 
@@ -15,7 +16,7 @@ import xarray as xr
 
 from .params import ASL_REGION, CALCULATION_VERSION, SOFTWARE_VERSION, MASK_THRESHOLD
 from .plot import plot_lows
-from .utils import tqdm_joblib
+from .utils import tqdm_joblib, configure_s3_bucket
 
 logging.getLogger("asli").addHandler(logging.NullHandler())
 
@@ -177,10 +178,15 @@ class ASLICalculator:
         data_dir: str = "./data",
         mask_filename: str = "era5_lsm.nc",
         msl_pattern: str = "monthly/era5_mean_sea_level_pressure_monthly_*.nc",
+        s3_config_dir: str = Path.home(),
+        s3_config_filename: str = ".s3cfg",
     ) -> None:
-        self.data_dir = Path(data_dir)
+        self.data_dir = data_dir
         self.mask_filename = mask_filename
         self.msl_pattern = msl_pattern
+
+        self.s3_config_filepath = s3_config_dir
+        self.s3_config_filename = s3_config_filename
 
         self.land_sea_mask = None
         self.raw_msl_data = None
@@ -193,10 +199,27 @@ class ASLICalculator:
         """
         Reads in the Land-Sea mask file from <data_dir>/<mask_filename>
         """
+        # Check is the path is an s3 bucket
+        if self.data_dir.startswith("s3://"):
+            # Using utility function to set up s3 connection with the config file
+            s3_connection = configure_s3_bucket(
+                self.s3_config_filepath, self.s3_config_filename
+            )
+            
+            # Passing s3 connection and specifying file bucket 
+            s3_lsm_bucket = s3fs.S3Map(
+                os.path.join(self.data_dir, self.mask_filename),
+                s3 = s3_connection
+            )
 
-        self.land_sea_mask = xr.open_dataset(
-            Path(self.data_dir, self.mask_filename)
-        ).lsm.squeeze()
+            # Using open_zarr to read in files, ie. we are expecting .zarr NOT .nc
+            self.land_sea_mask = xr.open_zarr(
+                s3_lsm_bucket, consolidated=True
+            )
+        else:
+            self.land_sea_mask = xr.open_dataset(
+                Path(self.data_dir, self.mask_filename)
+            ).lsm.squeeze()
 
     def read_msl_data(self):
         """

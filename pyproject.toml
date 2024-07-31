@@ -28,7 +28,8 @@ dependencies = [
     "pandas",
     "scikit-image",
     "xarray",
-    "jinja2"
+    "jinja2",
+    "s3fs"
 ]
 
 [tool.setuptools.packages.find]

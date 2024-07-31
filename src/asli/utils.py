@@ -1,5 +1,10 @@
 import contextlib
 import joblib
+import s3fs
+import os
+import sys
+import configparser
+from pathlib import Path
 
 
 # https://stackoverflow.com/questions/24983493/tracking-progress-of-joblib-parallel-execution
@@ -19,3 +24,27 @@ def tqdm_joblib(tqdm_object):
     finally:
         joblib.parallel.BatchCompletionCallBack = old_batch_callback
         tqdm_object.close()
+
+def configure_s3_bucket(
+        s3_config_filepath: str,
+        s3_config_filename: str
+        ):
+    """
+    Configures S3 bucket using a config file.
+    
+    configfile_filepath(str): location of s3 config file, needs to contain 'secret_key', 'access_key' and 'host_bucket' (without https:// prefix)
+    """
+    config = configparser.ConfigParser()
+    config_file = os.path.join(s3_config_filepath, s3_config_filename)
+    config.read(config_file)
+    s3_store_credentials = config['default']
+
+# Populating s3fs s3 connection using the .s3cfg config file
+    s3_connection = s3fs.S3FileSystem(
+        anon=False,
+        secret=s3_store_credentials['secret_key'],
+        key=s3_store_credentials['access_key'],
+        client_kwargs={'endpoint_url': "https://" + s3_store_credentials['host_bucket']}
+    )
+
+    return s3_connection
