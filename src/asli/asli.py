@@ -19,6 +19,7 @@ from .utils import tqdm_joblib
 
 logger = logging.getLogger(__name__)
 
+__all__ = ["ASLICalculator"]
 
 def asl_sector_mean(
     da: xr.DataArray, mask: xr.DataArray, asl_region: Mapping[str, float] = ASL_REGION
