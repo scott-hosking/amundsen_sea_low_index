@@ -240,11 +240,14 @@ class ASLICalculator:
         From loaded mean sea level pressure data and land-sea mask, runs the calculation of minima.
 
         Args:
-            n_jobs (int, optional): Number of processes to use for parallel caclulation. Defaults to 1.
+            n_jobs (int, optional): Number of processes to use for parallel calculation. Defaults to 1.
 
         Returns:
-            pd.DataFrame: dataframe containing locations of pressure minima, mean pressure
+            pd.DataFrame: dataframe containing locations of pressure minima, mean pressure.
         """
+
+        if self.sliced_msl is None:
+            raise Exception(f"self.sliced_msl is {self.sliced_msl}, have you run .read_data()?")
 
         if "season" in self.sliced_msl.dims:
             ntime = 4
