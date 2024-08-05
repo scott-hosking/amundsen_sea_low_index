@@ -319,7 +319,7 @@ class ASLICalculator:
         """Writes out ASLICalculator.asl_df as a CSV file with header.
 
         Args:
-            filename (str): filename to write out to.
+            filename (str): filename to write out to, relative to "data_dir".
         """
 
         filepath = Path(self.data_dir, filename)
@@ -346,6 +346,7 @@ class ASLICalculator:
             data_version=datetime.datetime.now().strftime("%Y%m%d"),
         )
 
+        logger.info(f"Writing csv to {f}")
         with open(filepath, "w") as f:
             f.writelines(header)
             self.asl_df.to_csv(f, index=False)
