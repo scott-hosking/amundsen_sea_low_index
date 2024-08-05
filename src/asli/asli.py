@@ -305,6 +305,26 @@ class ASLICalculator:
             f.writelines(header)
             self.asl_df.to_csv(f, index=False)
 
+
+    def import_from_csv(self, filename: (str|Path),force: bool = False):
+        """
+        Import a csv file exported from the .export_df method, for example to plot data from a previous session.
+
+        Args:
+            filename (str|Path, required): Path to csv file containing ASL dataframe.
+            force (bool, optional): Overwrite existing calculations in this object. Defaults to False.
+        """
+
+        if self.asl_df is not None and not force:
+            logger.warn("Calculation dataframe has existing values, set force=True to overwrite with import.")
+            return
+        
+        filepath = Path(self.data_dir, filename)
+        
+        logger.info(f"Importing ASL values from {filepath}")
+        self.asl_df = pd.read_csv(filepath, header=27)
+
+
     def plot_region_all(self):
         """Plots mean sea level pressure fields for the Amundsen Sea with identified low pressure and bounding box."""
 
