@@ -88,6 +88,19 @@ Basic plots of the pressure fields and lows can be made using the `plot_region_a
 a.plot_region_all()
 ```
 
+Optionally, calculations already saved to file can be read back in to a new `ASLCalculator` object with its `import_from_csv()` method, for instance in a new session, for plotting. Note that to plot from a new object, the `read_mask_data()` and `read_msl_data()` (or just `read_data()`) methods will need to be run first, for example:
+
+```
+import asli
+b = asli.ASLICalculator(data_dir="./data/", 
+                   mask_filename="era5_lsm.nc",
+                   msl_pattern="ERA5/monthly/era5_mean_sea_level_pressure_monthly_1988.nc"
+                   )
+b.read_data()
+b.import_from_csv('asl.csv')
+b.plot_region_all()
+```
+
 ### Getting help
 Most of the package has docstrings in the source code, so try running `help()` on any of the functions, classes or their methods, e.g. `help(asli.ASLICalculator)`.
 
