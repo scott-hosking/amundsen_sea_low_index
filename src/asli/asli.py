@@ -315,7 +315,7 @@ class ASLICalculator:
             data_version=datetime.datetime.now().strftime("%Y%m%d"),
         )
 
-        logger.info(f"Writing csv to {f}")
+        logger.info(f"Writing csv to {filepath}")
         with open(filepath, "w") as f:
             f.writelines(header)
             self.asl_df.to_csv(f, index=False)
