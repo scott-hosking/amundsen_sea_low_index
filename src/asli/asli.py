@@ -307,6 +307,10 @@ class ASLICalculator:
 
     def plot_region_all(self):
         """Plots mean sea level pressure fields for the Amundsen Sea with identified low pressure and bounding box."""
+
+        if self.asl_df is None:
+            raise Warning(f"ASL calculation dataframe is {self.as_df}, can not plot. \
+                          Try running .calculate() first.")
         plot_lows(self.masked_msl_data, self.asl_df, regionbox=ASL_REGION)
 
     def plot_region_year(self, year: int):
@@ -315,6 +319,10 @@ class ASLICalculator:
         Args:
             year (int): year to plot
         """
+        if self.asl_df is None:
+            raise Warning(f"ASL calculation dataframe is {self.as_df}, can not plot. \
+                          Try running .calculate() first.")
+        
         da = self.masked_msl_data.sel(
             time=slice(str(year) + "-01-01", str(year) + "-12-01")
         )
