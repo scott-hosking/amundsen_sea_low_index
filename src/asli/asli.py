@@ -92,12 +92,13 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
     df["ActCenPres"] = pressure
     df["SectorPres"] = sector_mean_pres
     df["time"] = time_str
+    df["interim"] = True if da.expver.values == "0005" else False
 
     ### Add relative central pressure (Hosking et al. 2013)
     df["RelCenPres"] = df["ActCenPres"] - df["SectorPres"]
 
     ### re-order columns
-    df = df[["time", "lon", "lat", "ActCenPres", "SectorPres", "RelCenPres"]]
+    df = df[["time", "lon", "lat", "ActCenPres", "SectorPres", "RelCenPres", "interim"]]
 
     ### clean-up DataFrame
     df = df.reset_index(drop=True)
