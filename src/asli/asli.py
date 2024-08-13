@@ -57,7 +57,7 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
     sector_mean_pres = asl_sector_mean(da, mask)
     threshold = sector_mean_pres
 
-    time_str = str(da.time.values)[:10]
+    time_str = str(da.date.values)[:10]
 
     # fill land in with highest value to limit lows being found here
     da_max = da.max().values
