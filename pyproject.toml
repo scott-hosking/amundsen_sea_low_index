@@ -28,8 +28,7 @@ dependencies = [
     "pandas",
     "scikit-image",
     "xarray",
-    "jinja2",
-    "s3fs"
+    "jinja2"
 ]
 
 [tool.setuptools.packages.find]
@@ -51,6 +50,9 @@ docs = [
 ]
 dev = [
     "ruff"
+]
+s3 = [
+    "s3fs"
 ]
 
 [project.scripts]

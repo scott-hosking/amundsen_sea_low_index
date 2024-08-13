@@ -4,7 +4,6 @@ import argparse
 import datetime
 import logging
 import os
-import s3fs
 from pathlib import Path
 from typing import Mapping
 
@@ -203,6 +202,8 @@ class ASLICalculator:
         if self.data_dir.startswith("s3://"):
             # Using utility function to set up s3 connection with the config file
             # Passing s3 connection and specifying file bucket 
+            import s3fs
+
             s3_lsm_bucket = s3fs.S3Map(
                 os.path.join(self.data_dir, self.mask_filename),
                 s3 = configure_s3_bucket(self.s3_config_filepath, self.s3_config_filename)
@@ -229,6 +230,8 @@ class ASLICalculator:
             return
 
         if self.data_dir.startswith("s3://"):
+            import s3fs
+
             s3_msl_bucket = s3fs.S3Map(
                 os.path.join(self.data_dir, self.msl_pattern),
                 s3 = configure_s3_bucket(self.s3_config_filepath, self.s3_config_filename)
