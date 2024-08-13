@@ -21,7 +21,7 @@
 # 
 # The ASL (low pressure system) detection algorithm may be improved over time. Therefore 
 # it is recommended that the version number below is noted when using these data.
-#   ASLi_version_id = 3.20210820
+#   ASLi_version_id = 3.20240813
 #   ASLi_software_version = 0.0.1
 #   data_version = 20240813
 # 
