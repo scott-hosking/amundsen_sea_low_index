@@ -18,6 +18,7 @@
 #   lon        = Longitudinal location of ASL (degrees East)
 #   lat        = Latitudinal location of ASL
 #   RelCenPres = Relative central pressure (ActCenPres 'minus' SectorPres)
+#   DataSource = ERA5 (final data) or ERA5T (initial release data) from ECMWF
 # 
 # The ASL (low pressure system) detection algorithm may be improved over time. Therefore 
 # it is recommended that the version number below is noted when using these data.
