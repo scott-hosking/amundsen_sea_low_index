@@ -94,13 +94,13 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
     df["ActCenPres"] = pressure
     df["SectorPres"] = sector_mean_pres
     df["time"] = time_str
-    df["interim"] = True if da.expver.values == "0005" else False
+    df["DataSource"] = "ERA5T" if da.expver.values == "0005" else "ERA5"
 
     ### Add relative central pressure (Hosking et al. 2013)
     df["RelCenPres"] = df["ActCenPres"] - df["SectorPres"]
 
     ### re-order columns
-    df = df[["time", "lon", "lat", "ActCenPres", "SectorPres", "RelCenPres", "interim"]]
+    df = df[["time", "lon", "lat", "ActCenPres", "SectorPres", "RelCenPres", "DataSource"]]
 
     ### clean-up DataFrame
     df = df.reset_index(drop=True)
@@ -202,14 +202,14 @@ class ASLICalculator:
             Path(self.data_dir, self.mask_filename)
         ).lsm.squeeze()
 
-    def read_msl_data(self, include_interim: bool=False):
+    def read_msl_data(self, include_era5t: bool=False):
         """
         Reads in the MSL (mean sea level pressure) files from <data_dir>/<msl_pattern>.
         msl_pattern should be a file path under <data_dir> or a pattern (also within <data_dir>) as taken by xarray.open_mfdataset()
         eg monthly/era5_mean_sea_level_pressure_monthly_*.nc
 
         Args:
-            include_interim(bool): Controls whether ERA5 interim data is included. (Default: False)
+            include_era5t(bool): Controls whether ERA5T initial release data is included. (Default: False)
         """
 
         if self.land_sea_mask is None:
@@ -219,9 +219,9 @@ class ASLICalculator:
         raw_msl_data_path = os.path.join(self.data_dir, self.msl_pattern)
         self.raw_msl_data = xr.open_mfdataset(raw_msl_data_path).msl
 
-        # expver coordinate indicates whether data is interim or final
-        # expver=0001 - final, expver=0005 interim
-        if hasattr(self.raw_msl_data, "expver") and not include_interim:
+        # expver coordinate indicates whether data is initial or final release
+        # expver=0001 - final, expver=0005 initial
+        if hasattr(self.raw_msl_data, "expver") and not include_era5t:
             months = []
             for month in self.raw_msl_data:
                 if month.expver.values == "0001":
@@ -241,15 +241,15 @@ class ASLICalculator:
         sliced_msl = sliced_msl / 100.0
         self.sliced_msl = sliced_msl.assign_attrs(units="hPa")
 
-    def read_data(self, include_interim:bool = False):
+    def read_data(self, include_era5t:bool = False):
         """
         Convenience method for reading in both mask and msl data files.
 
         Args:
-            include_interim(bool): Controls whether ERA5 interim data is included. (Default: False)
+            include_era5t(bool): Controls whether ERA5T intial release data is included. (Default: False)
         """
         self.read_mask_data()
-        self.read_msl_data(include_interim)
+        self.read_msl_data(include_era5t)
 
     def calculate(self, n_jobs: int = 1) -> pd.DataFrame:
         """
@@ -367,10 +367,10 @@ def parse_args():
         help="Output file path for CSV, relative to <datadir>.",
     )
     parser.add_argument(
-        "-i",
-        "--interim",
+        "-e",
+        "--era5t",
         action="store_true",
-        help="When present, this flag enables the inclusion of interim ERA5 data (AKA ERA5T)."
+        help="When present, this flag enables the inclusion of ERA5T initial release data as well as finalised ERA5 data."
     )
     parser.add_argument(
         "-n",
@@ -399,7 +399,7 @@ def main():
 
     a = ASLICalculator(args.datadir, args.mask, args.msl_files[0])
     a.read_mask_data()
-    a.read_msl_data(include_interim=args.interim)
+    a.read_msl_data(include_era5t=args.era5t)
     a.calculate(args.numjobs)
 
     if args.output:
