@@ -65,7 +65,7 @@ a = asli.ASLICalculator(data_dir="./data/",
                    mask_filename="era5_lsm.nc",
                    msl_pattern="ERA5/monthly/era5_mean_sea_level_pressure_monthly_1988.nc"
                    )
-```
+
 
 then read in the data and perform the calculation:
 
@@ -73,6 +73,24 @@ then read in the data and perform the calculation:
 a.read_mask_data()
 a.read_msl_data()
 a.calculate()
+```
+
+#### Working with Zarr and Object Storage
+The `asli` package also supports Zarr data import from s3 storage through the python interface. The method remains the same, but you will need to install the [s3] optional dependencies.
+
+```sh
+pip install pip install git+https://github.com/scotthosking/amundsen-sea-low-index[s3]
+```
+
+Additionally you will need to provide the location of your s3 config file, to the `ASLICalculator` class:
+
+```py
+a = asli.ASLICalculator(data_dir="s3://asli", 
+                   mask_filename="zarr-lsm",
+                   msl_pattern="zarr-msl",
+                   s3_config_dir = Path.home(), # Default location
+                   s3_config_filename = ".s3cfg" # Default location
+                   )
 ```
 
 ### Outputting data as a csv file and plotting
@@ -103,6 +121,6 @@ When making changes to the source code (including to the docs):
 
 1. Fork this repository on GitHub,
 1. Clone the package to your computer: `git clone https://github.com/<your-username>/amundsen-sea-low-index`
-1. Inside a virtual environment, install the package as an editable pip install, including the optional development dependencies: `pip install -e amundsen-sea-low-index[tests,docs,dev]` (where `amundsen-sea-low-index` is the relative path to the cloned repository),
+1. Inside a virtual environment, install the package as an editable pip install, including the optional development dependencies: `pip install -e amundsen-sea-low-index[tests,docs,dev,s3]` (where `amundsen-sea-low-index` is the relative path to the cloned repository),
 1. Make your changes and run the tests using pytest: `pytest` and/or test the docs build using `jupyter-book build docs/`
 1. Commit and push your changes to GitHub and open a pull request.
