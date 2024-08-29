@@ -53,7 +53,8 @@ dev = [
     "ruff"
 ]
 s3 = [
-    "s3fs"
+    "s3fs",
+    "zarr"
 ]
 
 [project.scripts]
