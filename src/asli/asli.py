@@ -212,7 +212,7 @@ class ASLICalculator:
             s3_lsm_bucket = s3fs.S3Map(
                 os.path.join(self.data_dir, self.mask_filename),
                 s3 = configure_s3_bucket(self.s3_config_filepath, self.s3_config_filename)
-            )
+            ).lsm.squeeze()
 
             # Using open_zarr to read in files, ie. we are expecting .zarr NOT .nc
             self.land_sea_mask = xr.open_zarr(
@@ -248,7 +248,7 @@ class ASLICalculator:
             # Using open_zarr to read in files, ie. we are expecting .zarr NOT .nc
             self.raw_msl_data = xr.open_zarr(
                 s3_msl_bucket, consolidated=True
-            )
+            ).msl
         else:        
             raw_msl_data_path = os.path.join(self.data_dir, self.msl_pattern)
             self.raw_msl_data = xr.open_mfdataset(raw_msl_data_path).msl
