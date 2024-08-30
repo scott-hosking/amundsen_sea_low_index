@@ -189,7 +189,7 @@ class ASLICalculator:
         self.mask_filename = mask_filename
         self.msl_pattern = msl_pattern
 
-        self.s3_config_filepath = s3_config_dir
+        self.s3_config_dir = s3_config_dir
         self.s3_config_filename = s3_config_filename
 
         self.land_sea_mask = None
@@ -211,7 +211,7 @@ class ASLICalculator:
 
             s3_lsm_bucket = s3fs.S3Map(
                 os.path.join(self.data_dir, self.mask_filename),
-                s3 = configure_s3_bucket(self.s3_config_filepath, self.s3_config_filename)
+                s3 = configure_s3_bucket(self.s3_config_dir, self.s3_config_filename)
             )
 
             # Using open_zarr to read in files, ie. we are expecting .zarr NOT .nc
@@ -242,7 +242,7 @@ class ASLICalculator:
 
             s3_msl_bucket = s3fs.S3Map(
                 os.path.join(self.data_dir, self.msl_pattern),
-                s3 = configure_s3_bucket(self.s3_config_filepath, self.s3_config_filename)
+                s3 = configure_s3_bucket(self.s3_config_dir, self.s3_config_filename)
             )
 
             # Using open_zarr to read in files, ie. we are expecting .zarr NOT .nc
