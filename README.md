@@ -65,7 +65,7 @@ a = asli.ASLICalculator(data_dir="./data/",
                    mask_filename="era5_lsm.nc",
                    msl_pattern="ERA5/monthly/era5_mean_sea_level_pressure_monthly_1988.nc"
                    )
-
+```
 
 then read in the data and perform the calculation:
 
