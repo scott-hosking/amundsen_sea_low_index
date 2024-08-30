@@ -85,6 +85,8 @@ pip install git+https://github.com/scotthosking/amundsen-sea-low-index[s3]
 Additionally you will need to provide the location of your s3 config file, to the `ASLICalculator` class:
 
 ```py
+from pathlib import Path
+
 a = asli.ASLICalculator(data_dir="s3://asli", 
                    mask_filename="zarr-lsm",
                    msl_pattern="zarr-msl",
