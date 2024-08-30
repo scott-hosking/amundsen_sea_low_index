@@ -79,7 +79,7 @@ a.calculate()
 The `asli` package also supports Zarr data import from s3 storage through the python interface. The method remains the same, but you will need to install the [s3] optional dependencies.
 
 ```sh
-pip install pip install git+https://github.com/scotthosking/amundsen-sea-low-index[s3]
+pip install git+https://github.com/scotthosking/amundsen-sea-low-index[s3]
 ```
 
 Additionally you will need to provide the location of your s3 config file, to the `ASLICalculator` class:
