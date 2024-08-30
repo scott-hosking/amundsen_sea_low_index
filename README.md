@@ -93,6 +93,18 @@ a = asli.ASLICalculator(data_dir="s3://asli",
                    )
 ```
 
+Below is an example of an s3 config file, `~/.s3cfg`. This example is adapted from the [JASMIN documentation on using object storage](https://help.jasmin.ac.uk/docs/short-term-project-storage/using-the-jasmin-object-store/#using-s3cmd). Other object store providers can be used, but the config at a minimum should contain the `[default]` header and provide `access key`, `host_base`, `host_bucket` and `secret_key`. 
+
+```txt
+[default]
+access_key = <access key>
+host_base = my-os-tenancy-o.s3-ext.jc.rl.ac.uk
+host_bucket = my-os-tenancy-o.s3-ext.jc.rl.ac.uk
+secret_key = <secret key>
+use_https = True
+signature_v2 = False
+```
+
 ### Outputting data as a csv file and plotting
 Once the calculations are done, we can write out the dataframe to a csv file, providing the filename:
 
