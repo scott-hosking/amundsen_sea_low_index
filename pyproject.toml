@@ -59,4 +59,5 @@ s3 = [
 [project.scripts]
 asli_data_lsm = "asli:data._cli_get_land_sea_mask"
 asli_data_era5 = "asli:data._cli_get_era5_monthly"
-asli_calc = "asli:asli.main"
+asli_calc = "asli:asli._cli_calc"
+asli_plot = "asli:asli._cli_plot"

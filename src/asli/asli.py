@@ -291,11 +291,14 @@ class ASLICalculator:
         From loaded mean sea level pressure data and land-sea mask, runs the calculation of minima.
 
         Args:
-            n_jobs (int, optional): Number of processes to use for parallel caclulation. Defaults to 1.
+            n_jobs (int, optional): Number of processes to use for parallel calculation. Defaults to 1.
 
         Returns:
-            pd.DataFrame: dataframe containing locations of pressure minima, mean pressure
+            pd.DataFrame: dataframe containing locations of pressure minima, mean pressure.
         """
+
+        if self.sliced_msl is None:
+            raise Exception(f"self.sliced_msl is {self.sliced_msl}, have you run .read_data()?")
 
         if "season" in self.sliced_msl.dims:
             ntime = 4
@@ -355,8 +358,32 @@ class ASLICalculator:
             f.writelines(header)
             self.asl_df.to_csv(f, index=False)
 
+
+    def import_from_csv(self, filename: (str|Path),force: bool = False):
+        """
+        Import a csv file exported from the .export_df method, for example to plot data from a previous session.
+
+        Args:
+            filename (str|Path, required): Path to csv file containing ASL dataframe.
+            force (bool, optional): Overwrite existing calculations in this object. Defaults to False.
+        """
+
+        if self.asl_df is not None and not force:
+            logger.warn("Calculation dataframe has existing values, set force=True to overwrite with import.")
+            return
+        
+        filepath = Path(self.data_dir, filename)
+        
+        logger.info(f"Importing ASL values from {filepath}")
+        self.asl_df = pd.read_csv(filepath, header=27)
+
+
     def plot_region_all(self):
         """Plots mean sea level pressure fields for the Amundsen Sea with identified low pressure and bounding box."""
+
+        if self.asl_df is None:
+            raise Warning(f"ASL calculation dataframe is {self.as_df}, can not plot. \
+                          Try running .calculate() first.")
         plot_lows(self.masked_msl_data, self.asl_df, regionbox=ASL_REGION)
 
     def plot_region_year(self, year: int):
@@ -365,6 +392,10 @@ class ASLICalculator:
         Args:
             year (int): year to plot
         """
+        if self.asl_df is None:
+            raise Warning(f"ASL calculation dataframe is {self.as_df}, can not plot. \
+                          Try running .calculate() first.")
+        
         da = self.masked_msl_data.sel(
             time=slice(str(year) + "-01-01", str(year) + "-12-01")
         )
@@ -372,13 +403,8 @@ class ASLICalculator:
         plot_lows(da, df, year=year, regionbox=ASL_REGION)
 
 
-def parse_args():
-    """Parse command-line arguments for main()"""
-
-    parser = argparse.ArgumentParser(
-        prog="asli_calc",
-        description="Calculates the Amundsen Sea Low from mean sea level pressure fields.",
-    )
+def _cli_common_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
+    """Parse command-line args common to calculation and plotting."""
     parser.add_argument(
         "-d",
         "--datadir",
@@ -402,6 +428,43 @@ def parse_args():
         help="Output file path for CSV, relative to <datadir>.",
     )
     parser.add_argument(
+        "msl_files",
+        nargs="*",
+        type=str,
+        help="Path or glob pattern relative to <datadir> for file(s) containing mean sea level pressure.",
+    )  # msl files/pattern
+
+    return parser
+
+
+def _get_cli_plot_args():
+    """Parse command-line arguments for cli_plot()"""
+    
+    parser = argparse.ArgumentParser(
+        prog="asli_plot",
+        description="Plot Amundsen sea low with mean sea level pressure fields.",
+    )
+    parser.add_argument(
+        "-i",
+        "--input",
+        nargs="?",
+        type=str,
+        help="Input CSV file, relative to <datadir>.",
+    )
+    parser = _cli_common_args(parser)
+
+    return parser.parse_args()
+
+
+def _get_cli_calc_args():
+    """Parse command-line arguments for cli_calc()"""
+
+    parser = argparse.ArgumentParser(
+        prog="asli_calc",
+        description="Calculates the Amundsen Sea Low from mean sea level pressure fields.",
+    )
+    parser = _cli_common_args(parser)
+    parser.add_argument(
         "-e",
         "--era5t",
         action="store_true",
@@ -415,22 +478,24 @@ def parse_args():
         default=1,
         help="Number of processes used by joblib in parallel calculation.",
     )
-    # filter by time range
-    # parser.add_argument("-p", "--plot", action='store_true', type=bool, help="Outputs a plot of the pressure fields and lows.")
-    parser.add_argument(
-        "msl_files",
-        nargs="*",
-        type=str,
-        help="Path or glob pattern relative to <datadir> for file(s) containing mean sea level pressure.",
-    )  # msl files/pattern
-
+    
     return parser.parse_args()
 
+def _cli_plot():
+    """Command-line interface to ASLI plotting."""
 
-def main():
+    args = _get_cli_plot_args()
+
+    a = ASLICalculator(args.datadir, args.mask, args.msl_files[0])
+    a.read_mask_data()
+    a.read_msl_data()
+    a.import_from_csv(args.input)
+    a.plot_region_all()
+
+def _cli_calc():
     """Command-line interface to ASL calculation."""
 
-    args = parse_args()
+    args = _get_cli_calc_args()
 
     a = ASLICalculator(args.datadir, args.mask, args.msl_files[0])
     a.read_mask_data()
@@ -440,9 +505,6 @@ def main():
     if args.output:
         a.to_csv(args.output)
 
-    # if args.plot:
-    #     a.plot_region_year()
-
 
 if __name__ == "__main__":
-    main()
+    _cli_calc()
