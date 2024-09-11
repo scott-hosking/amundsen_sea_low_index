@@ -75,6 +75,38 @@ a.read_msl_data()
 a.calculate()
 ```
 
+#### Working with Zarr and Object Storage
+The `asli` package also supports Zarr data import from s3 storage through the python interface. The method remains the same, but you will need to install the [s3] optional dependencies.
+
+```sh
+pip install git+https://github.com/scotthosking/amundsen-sea-low-index[s3]
+```
+
+Additionally you will need to provide the location of your s3 config file, to the `ASLICalculator` class:
+
+```py
+from pathlib import Path
+
+a = asli.ASLICalculator(data_dir="s3://asli", 
+                   mask_filename="zarr-lsm",
+                   msl_pattern="zarr-msl",
+                   s3_config_dir = Path.home(), # Default location
+                   s3_config_filename = ".s3cfg" # Default location
+                   )
+```
+
+Below is an example of an s3 config file, `~/.s3cfg`. This example is adapted from the [JASMIN documentation on using object storage](https://help.jasmin.ac.uk/docs/short-term-project-storage/using-the-jasmin-object-store/#using-s3cmd). Other object store providers can be used, but the config at a minimum should contain the `[default]` header and provide `access key`, `host_base`, `host_bucket` and `secret_key`. 
+
+```txt
+[default]
+access_key = <access key>
+host_base = my-os-tenancy-o.s3-ext.jc.rl.ac.uk
+host_bucket = my-os-tenancy-o.s3-ext.jc.rl.ac.uk
+secret_key = <secret key>
+use_https = True
+signature_v2 = False
+```
+
 ### Outputting data as a csv file and plotting
 Once the calculations are done, we can write out the dataframe to a csv file, providing the filename:
 
@@ -103,6 +135,6 @@ When making changes to the source code (including to the docs):
 
 1. Fork this repository on GitHub,
 1. Clone the package to your computer: `git clone https://github.com/<your-username>/amundsen-sea-low-index`
-1. Inside a virtual environment, install the package as an editable pip install, including the optional development dependencies: `pip install -e amundsen-sea-low-index[tests,docs,dev]` (where `amundsen-sea-low-index` is the relative path to the cloned repository),
+1. Inside a virtual environment, install the package as an editable pip install, including the optional development dependencies: `pip install -e amundsen-sea-low-index[tests,docs,dev,s3]` (where `amundsen-sea-low-index` is the relative path to the cloned repository),
 1. Make your changes and run the tests using pytest: `pytest` and/or test the docs build using `jupyter-book build docs/`
 1. Commit and push your changes to GitHub and open a pull request.

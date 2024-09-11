@@ -51,6 +51,10 @@ docs = [
 dev = [
     "ruff"
 ]
+s3 = [
+    "s3fs",
+    "zarr"
+]
 
 [project.scripts]
 asli_data_lsm = "asli:data._cli_get_land_sea_mask"

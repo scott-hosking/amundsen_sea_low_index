@@ -15,7 +15,7 @@ import xarray as xr
 
 from .params import ASL_REGION, CALCULATION_VERSION, SOFTWARE_VERSION, MASK_THRESHOLD
 from .plot import plot_lows
-from .utils import tqdm_joblib
+from .utils import tqdm_joblib, configure_s3_bucket
 
 logger = logging.getLogger(__name__)
 
@@ -181,10 +181,15 @@ class ASLICalculator:
         data_dir: str = "./data",
         mask_filename: str = "era5_lsm.nc",
         msl_pattern: str = "monthly/era5_mean_sea_level_pressure_monthly_*.nc",
+        s3_config_dir: str = Path.home(),
+        s3_config_filename: str = ".s3cfg",
     ) -> None:
-        self.data_dir = Path(data_dir)
+        self.data_dir = data_dir
         self.mask_filename = mask_filename
         self.msl_pattern = msl_pattern
+
+        self.s3_config_dir = s3_config_dir
+        self.s3_config_filename = s3_config_filename
 
         self.land_sea_mask = None
         self.raw_msl_data = None
@@ -197,10 +202,26 @@ class ASLICalculator:
         """
         Reads in the Land-Sea mask file from <data_dir>/<mask_filename>
         """
+        # Check is the path is an s3 bucket
+        if self.data_dir.startswith("s3://"):
+            # Using utility function to set up s3 connection with the config file
+            # Passing s3 connection and specifying file bucket 
+            import s3fs
+            import zarr
 
-        self.land_sea_mask = xr.open_dataset(
-            Path(self.data_dir, self.mask_filename)
-        ).lsm.squeeze()
+            s3_lsm_bucket = s3fs.S3Map(
+                os.path.join(self.data_dir, self.mask_filename),
+                s3 = configure_s3_bucket(self.s3_config_dir, self.s3_config_filename)
+            )
+
+            # Using open_zarr to read in files, ie. we are expecting .zarr NOT .nc
+            self.land_sea_mask = xr.open_zarr(
+                s3_lsm_bucket, consolidated=True
+            ).lsm.squeeze()
+        else:
+            self.land_sea_mask = xr.open_dataset(
+                Path(self.data_dir, self.mask_filename)
+            ).lsm.squeeze()
 
     def read_msl_data(self, include_era5t: bool=False):
         """
@@ -216,8 +237,22 @@ class ASLICalculator:
             logger.error("Must read in land-sea mask before mean sea level data.")
             return
 
-        raw_msl_data_path = os.path.join(self.data_dir, self.msl_pattern)
-        self.raw_msl_data = xr.open_mfdataset(raw_msl_data_path).msl
+        if self.data_dir.startswith("s3://"):
+            import s3fs
+            import zarr
+
+            s3_msl_bucket = s3fs.S3Map(
+                os.path.join(self.data_dir, self.msl_pattern),
+                s3 = configure_s3_bucket(self.s3_config_dir, self.s3_config_filename)
+            )
+
+            # Using open_zarr to read in files, ie. we are expecting .zarr NOT .nc
+            self.raw_msl_data = xr.open_zarr(
+                s3_msl_bucket, consolidated=True
+            ).msl
+        else:        
+            raw_msl_data_path = os.path.join(self.data_dir, self.msl_pattern)
+            self.raw_msl_data = xr.open_mfdataset(raw_msl_data_path).msl
 
         # expver coordinate indicates whether data is initial or final release
         # expver=0001 - final, expver=0005 initial
