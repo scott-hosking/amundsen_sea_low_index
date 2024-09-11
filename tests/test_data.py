@@ -1,9 +1,12 @@
 import os
 from pathlib import Path
+import tempfile
 import unittest
 from unittest.mock import patch
+import uuid
 
-import cdsapi
+import cads_api_client
+import cads_api_client.legacy_api_client
 import pytest
 
 from asli import ASL_REGION
@@ -41,41 +44,42 @@ def test_get_request_area(area, border, expected):
 class TestCDSDownloader(unittest.TestCase):
     """Test class for tests implementing cdsapi.Client"""
 
-    @pytest.fixture(autouse=True)
-    def initpaths(self, tmpdir, tmp_path):
-        """Create temporary files and directories using pytest magic."""
-        self.tmpdir = tmpdir
-        self.tmp_path = tmp_path
-
     def setUp(self):
+        self.tmp_dir = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+
+    def tearDown(self):
+        self.tmp_dir.cleanup()
+
+    @classmethod
+    def setUpClass(cls):
         """
         Write a dummy CDS API key file if needed.
         Tests don't actually call the API, but the cdsapi package expects this file to exist.
         """
 
-        self.cdsapirc_path = Path(Path.home(), ".cdsapirc")
-        if not os.path.exists(self.cdsapirc_path):
-            self.created_temp_cdsapirc_file = True
-            with open(self.cdsapirc_path, "w") as f:
+        cls.cdsapirc_path = Path(Path.home(), ".cdsapirc")
+        if not os.path.exists(cls.cdsapirc_path):
+            cls.created_temp_cdsapirc_file = True
+            with open(cls.cdsapirc_path, "w") as f:
                 f.writelines(
                     [
                         "\n",
-                        "url: https://cds.climate.copernicus.eu/api/v2\n",
-                        "key: 123456:some-dummy-key\n",
+                        "url: https://cds-beta.climate.copernicus.eu/api\n",
+                        f"key: {str(uuid.uuid4())}\n",
                         "\n",
                     ]
                 )
         else:
-            self.created_temp_cdsapirc_file = False
+            cls.created_temp_cdsapirc_file = False
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         """Remove the .cdsapirc file if it was created by these tests."""
-        if self.created_temp_cdsapirc_file:
-            os.remove(self.cdsapirc_path)
+        if cls.created_temp_cdsapirc_file:
+            os.remove(cls.cdsapirc_path)
 
     def test_get_land_sea_mask(self):
-        data_dir = self.tmpdir
-        filename = self.tmp_path
+        data_dir = self.tmp_dir.name
         area = ASL_REGION
         border = 10
 
@@ -101,19 +105,17 @@ class TestCDSDownloader(unittest.TestCase):
             }
         )
 
-        output_path = Path(data_dir, filename)
-
-        with patch.object(cdsapi.Client, "retrieve", return_value=None) as mock_method:
+        with patch.object(cads_api_client.legacy_api_client.LegacyApiClient, "retrieve", return_value=None) as mock_method:
             get_land_sea_mask(
-                data_dir=data_dir, filename=filename, area=area, border=border
+                data_dir=str(data_dir), area=area, border=border
             )
 
         mock_method.assert_called_with(
-            "reanalysis-era5-single-levels-monthly-means", request_params, output_path
+            "reanalysis-era5-single-levels-monthly-means", request_params, Path(data_dir, "era5_lsm.nc")
         )
 
     def test_get_era5_monthly(self):
-        data_dir = self.tmpdir
+        data_dir = self.tmp_dir.name
         start_year = 2006
         end_year = 2010
         area = ASL_REGION
@@ -157,7 +159,7 @@ class TestCDSDownloader(unittest.TestCase):
         output_filename = f"ERA5/monthly/era5_mean_sea_level_pressure_monthly_{start_year}-{end_year}.nc"
         output_path = Path(data_dir, output_filename)
 
-        with patch.object(cdsapi.Client, "retrieve", return_value=None) as mock_method:
+        with patch.object(cads_api_client.legacy_api_client.LegacyApiClient, "retrieve", return_value=None) as mock_method:
             get_era5_monthly(
                 data_dir=data_dir,
                 start_year=start_year,

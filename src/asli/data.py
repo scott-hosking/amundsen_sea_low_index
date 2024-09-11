@@ -11,6 +11,14 @@ from .params import ASL_REGION
 
 logger = logging.getLogger(__name__)
 
+__all__ = [
+    "CDSDownloader",
+    "get_era5_monthly",
+    "get_land_sea_mask"
+]
+
+DEFAULT_START_YEAR = 1953
+DEFAULT_END_YEAR = datetime.now().year
 
 class CDSDownloader:
     def __init__(
@@ -43,25 +51,25 @@ class CDSDownloader:
 def get_era5_monthly(
     data_dir: str,
     vars: list = ["msl"],
-    start_year: int = 2006,
-    end_year: int = 2023,
+    start_year: int = DEFAULT_START_YEAR,
+    end_year: int = DEFAULT_END_YEAR,
     area: dict = ASL_REGION,
     border: float = None,
 ) -> None:
-    """
+    __doc__=f"""
     Download the ERA5 monthly averaged variables from the Climate Data Store (CDS).
-    Uses the CDS API and therefore requires CDS account and API key.
-    Please see the CDS API documentation: https://cds.climate.copernicus.eu/api-how-to
-    If running for the first time, may require agreement to CDS T&Cs per dataset. See output for details.
+    Uses the CDS API beta and therefore requires CDS account and API key.
+    Please see the CDS API documentation: https://cds-beta.climate.copernicus.eu/how-to-api
+    If running for the first time, may require agreement to CDS Terms of Use per dataset at https://cds-beta.climate.copernicus.eu/datasets/reanalysis-era5-single-levels-monthly-means?tab=download
 
     Downloads may queue for a considerable time depending on the CDS.
-    Request progress can be tracked through your CDS account at: https://cds.climate.copernicus.eu/cdsapp#!/yourrequests
+    Request progress can be tracked through your CDS account at: https://cds-beta.climate.copernicus.eu/requests
 
     data_dir(str): path of data directory
     vars (Sequence[str]): list of strings specifying variables to download. Can be one or more of "msl" (default), "tas", "uas", \
         "vas" corresponding to "mean_sea_level_pressure", "2m_temperature", "10m_u_component_of_wind", and "10m_v_component_of_wind, respectively.
-    start_year(int): earliest year of data to download
-    start_year(int): latest year of data to download
+    start_year(int): earliest year of data to download. (Default: 1953)
+    start_year(int): latest year of data to download. (Default: current year)
     area(dict): either dictionary containing keys 'north', 'south', 'east', 'west' bounding coordinates of area to download (default) or None.
     """
 
@@ -130,16 +138,16 @@ def _cli_get_era5_monthly():
     parser.add_argument(
         "-s",
         "--start",
-        default=1979,
+        default=DEFAULT_START_YEAR,
         type=int,
-        help="Earliest year to download. (Default: 1979)",
+        help=f"Earliest year to download. (Default: {DEFAULT_START_YEAR})",
     )
     parser.add_argument(
         "-n",
         "--end",
-        default=datetime.now().year,
+        default=DEFAULT_END_YEAR,
         type=int,
-        help=f"Latest year to download. (Default: {datetime.now().year})",
+        help=f"Latest year to download. (Default: {DEFAULT_END_YEAR})",
     )
 
     args = parser.parse_args()
