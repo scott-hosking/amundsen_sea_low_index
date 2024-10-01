@@ -367,15 +367,29 @@ class ASLICalculator:
             filename (str|Path, required): Path to csv file containing ASL dataframe.
             force (bool, optional): Overwrite existing calculations in this object. Defaults to False.
         """
-
         if self.asl_df is not None and not force:
             logger.warn("Calculation dataframe has existing values, set force=True to overwrite with import.")
             return
         
-        filepath = Path(self.data_dir, filename)
-        
+        filepath = os.path.join(self.data_dir, filename)
+
         logger.info(f"Importing ASL values from {filepath}")
-        self.asl_df = pd.read_csv(filepath, header=27)
+
+        # If we are reading from s3 we will need to call our configuration file
+        if self.data_dir.startswith("s3://"):
+            csv_bucket = configure_s3_bucket(self.s3_config_dir, self.s3_config_filename)
+
+            self.asl_df = pd.read_csv(
+                filepath,
+                header=27,
+                storage_options={
+                    "key": csv_bucket.key,
+                    "secret": csv_bucket.secret,
+                    "token": csv_bucket.token,
+                }
+            )
+        else:
+            self.asl_df = pd.read_csv(filepath, header=27)
 
 
     def plot_region_all(self):
