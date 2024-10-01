@@ -104,7 +104,6 @@ def plot_lows(
 
         ## mark ASL
         df2 = df[df["time"] == df.time.values[i]]
-        print(df2)
         if len(df2) > 0:
             ax.plot(df2["lon"], df2["lat"], "mx", transform=ccrs.PlateCarree())
 
