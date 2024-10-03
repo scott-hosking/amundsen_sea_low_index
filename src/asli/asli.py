@@ -370,24 +370,19 @@ class ASLICalculator:
         if self.asl_df is not None and not force:
             logger.warn("Calculation dataframe has existing values, set force=True to overwrite with import.")
             return
-        
+
         filepath = os.path.join(self.data_dir, filename)
 
         logger.info(f"Importing ASL values from {filepath}")
 
         # If we are reading from s3 we will need to call our configuration file
         if self.data_dir.startswith("s3://"):
-            csv_bucket = configure_s3_bucket(self.s3_config_dir, self.s3_config_filename)
-
+            s3 = configure_s3_bucket(self.s3_config_dir, self.s3_config_filename)
+            
             self.asl_df = pd.read_csv(
-                filepath,
-                header=27,
-                storage_options={
-                    "key": csv_bucket.key,
-                    "secret": csv_bucket.secret,
-                    "token": csv_bucket.token,
-                }
-            )
+                s3.open('{}/{}'.format(self.data_dir, filename), mode='rb'),
+                header=27
+                )
         else:
             self.asl_df = pd.read_csv(filepath, header=27)
 
