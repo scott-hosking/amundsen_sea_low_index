@@ -1,6 +1,5 @@
 import contextlib
 import joblib
-import s3fs
 import os
 import sys
 import configparser
@@ -34,6 +33,7 @@ def configure_s3_bucket(
     
     configfile_filepath(str): location of s3 config file, needs to contain 'secret_key', 'access_key' and 'host_bucket' (without https:// prefix)
     """
+    import s3fs
     config = configparser.ConfigParser()
     config_file = os.path.join(s3_config_filepath, s3_config_filename)
     config.read(config_file)
