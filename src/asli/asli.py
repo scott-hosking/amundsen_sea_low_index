@@ -57,7 +57,7 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
     sector_mean_pres = asl_sector_mean(da, mask)
     threshold = sector_mean_pres
 
-    date = datetime.datetime.strptime(str(da.date.values), "%Y%m%d")
+    date = datetime.datetime.strptime(str(da.time.values), "%Y%m%d")
 
     time_str = date.strftime("%Y-%m-%d")
 
@@ -261,11 +261,12 @@ class ASLICalculator:
             for month in self.raw_msl_data:
                 if month.expver.values == "0001":
                     months.append(month)
-            self.raw_msl_data = xr.concat(months, dim="valid_time")
+            msl_valid_time = xr.concat(months, dim="date")
+            self.raw_msl_data = msl_valid_time.rename({"date" : "valid_time"})
         
 
         self.masked_msl_data = self.raw_msl_data.where(
-            self.land_sea_mask < MASK_THRESHOLD
+            self.land_sea_mask.values < MASK_THRESHOLD
         )
 
         ### slice area around ASL region
@@ -381,10 +382,10 @@ class ASLICalculator:
             
             self.asl_df = pd.read_csv(
                 s3.open('{}/{}'.format(self.data_dir, filename), mode='rb'),
-                header=27
+                header=28
                 )
         else:
-            self.asl_df = pd.read_csv(filepath, header=27)
+            self.asl_df = pd.read_csv(filepath, header=28)
 
 
     def plot_region_all(self):
@@ -406,10 +407,14 @@ class ASLICalculator:
                           Try running .calculate() first.")
         
         da = self.masked_msl_data.sel(
-            time=slice(str(year) + "-01-01", str(year) + "-12-01")
+            valid_time=slice(str(year) + "0101", str(year) + "1201")
         )
-        df = self.asl_df.sel(time=slice(str(year) + "-01-01", str(year) + "-12-01"))
-        plot_lows(da, df, year=year, regionbox=ASL_REGION)
+
+        df = self.asl_df[(
+            self.asl_df.time >= str(year)+"-01-01") & (self.asl_df.time <= str(year)+"-12-01"
+        )]
+
+        plot_lows(da, df, regionbox=ASL_REGION)
 
 
 def _cli_common_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
