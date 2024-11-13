@@ -57,7 +57,7 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
     sector_mean_pres = asl_sector_mean(da, mask)
     threshold = sector_mean_pres
 
-    date = datetime.datetime.strptime(str(da.date.values), "%Y%m%d")
+    date = datetime.datetime.strptime(str(da.time.values), "%Y%m%d")
 
     time_str = date.strftime("%Y-%m-%d")
 
