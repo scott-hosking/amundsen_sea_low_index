@@ -45,7 +45,7 @@ class TestCDSDownloader(unittest.TestCase):
     """Test class for tests implementing cdsapi.Client"""
 
     def setUp(self):
-        self.tmp_dir = tempfile.TemporaryDirectory(ignore_cleanup_errors=True)
+        self.tmp_dir = tempfile.TemporaryDirectory()
 
     def tearDown(self):
         self.tmp_dir.cleanup()
