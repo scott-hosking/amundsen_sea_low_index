@@ -9,6 +9,7 @@ from typing import Mapping
 
 import joblib
 import pandas as pd
+import numpy as np
 import skimage
 from tqdm import tqdm
 import xarray as xr
@@ -57,9 +58,11 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
     sector_mean_pres = asl_sector_mean(da, mask)
     threshold = sector_mean_pres
 
-    date = datetime.datetime.strptime(str(da.time.values), "%Y%m%d")
+    time_str = np.datetime_as_string(da.valid_time, unit='D')
 
-    time_str = date.strftime("%Y-%m-%d")
+    # date = datetime.datetime.strptime(str(da.valid_time.values), "%Y%m%d%h%m%s")
+
+    # time_str = date.strftime("%Y-%m-%d")
 
     # fill land in with highest value to limit lows being found here
     da_max = da.max().values
@@ -111,8 +114,8 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
 def _get_lows_by_time(da: xr.DataArray, slice_by: str, t: int, mask: xr.DataArray):
     if slice_by == "season":
         da_t = da.isel(season=t)
-    elif slice_by == "time":
-        da_t = da.isel(time=t)
+    elif slice_by == "valid_time":
+        da_t = da.isel(valid_time=t)
 
     return get_lows(da_t, mask)
 
@@ -261,9 +264,7 @@ class ASLICalculator:
             for month in self.raw_msl_data:
                 if month.expver.values == "0001":
                     months.append(month)
-            msl_valid_time = xr.concat(months, dim="date")
-            self.raw_msl_data = msl_valid_time.rename({"date" : "valid_time"})
-        
+            self.raw_msl_data = xr.concat(months, dim="valid_time")
 
         self.masked_msl_data = self.raw_msl_data.where(
             self.land_sea_mask.values < MASK_THRESHOLD
@@ -305,10 +306,8 @@ class ASLICalculator:
             ntime = 4
             slice_by = "season"
         if "valid_time" in self.sliced_msl.dims:
-            self.sliced_msl = self.sliced_msl.rename({'valid_time': 'time'})
-        if "time" in self.sliced_msl.dims:
-            ntime = self.sliced_msl.time.shape[0]
-            slice_by = "time"
+            ntime = self.sliced_msl.valid_time.shape[0]
+            slice_by = "valid_time"
 
         with tqdm_joblib(tqdm(total=ntime)) as progress_bar:
             lows_per_time = joblib.Parallel(n_jobs=n_jobs)(
