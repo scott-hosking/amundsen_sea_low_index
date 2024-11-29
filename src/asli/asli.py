@@ -5,7 +5,7 @@ import datetime
 import logging
 import os
 from pathlib import Path
-from typing import Mapping
+from typing import Mapping, Union
 
 import joblib
 import pandas as pd
@@ -356,7 +356,7 @@ class ASLICalculator:
             self.asl_df.to_csv(f, index=False)
 
 
-    def import_from_csv(self, filename: (str|Path),force: bool = False):
+    def import_from_csv(self, filename: Union[str, Path],force: bool = False):
         """
         Import a csv file exported from the .export_df method, for example to plot data from a previous session.
 
