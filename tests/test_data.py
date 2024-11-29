@@ -5,8 +5,8 @@ import unittest
 from unittest.mock import patch
 import uuid
 
-import cads_api_client
-import cads_api_client.legacy_api_client
+import datapi
+import datapi.legacy_api_client
 import pytest
 
 from asli import ASL_REGION
@@ -105,7 +105,7 @@ class TestCDSDownloader(unittest.TestCase):
             }
         )
 
-        with patch.object(cads_api_client.legacy_api_client.LegacyApiClient, "retrieve", return_value=None) as mock_method:
+        with patch.object(datapi.legacy_api_client.LegacyApiClient, "retrieve", return_value=None) as mock_method:
             get_land_sea_mask(
                 data_dir=str(data_dir), area=area, border=border
             )
@@ -159,7 +159,7 @@ class TestCDSDownloader(unittest.TestCase):
         output_filename = f"ERA5/monthly/era5_mean_sea_level_pressure_monthly_{start_year}-{end_year}.nc"
         output_path = Path(data_dir, output_filename)
 
-        with patch.object(cads_api_client.legacy_api_client.LegacyApiClient, "retrieve", return_value=None) as mock_method:
+        with patch.object(datapi.legacy_api_client.LegacyApiClient, "retrieve", return_value=None) as mock_method:
             get_era5_monthly(
                 data_dir=data_dir,
                 start_year=start_year,
