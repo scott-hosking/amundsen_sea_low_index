@@ -60,10 +60,6 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
 
     time_str = np.datetime_as_string(da.valid_time, unit='D')
 
-    # date = datetime.datetime.strptime(str(da.valid_time.values), "%Y%m%d%h%m%s")
-
-    # time_str = date.strftime("%Y-%m-%d")
-
     # fill land in with highest value to limit lows being found here
     da_max = da.max().values
     da = da.where(mask < MASK_THRESHOLD).fillna(da_max)
