@@ -9,7 +9,6 @@ from typing import Mapping
 
 import joblib
 import pandas as pd
-import numpy as np
 import skimage
 from tqdm import tqdm
 import xarray as xr
@@ -58,7 +57,9 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
     sector_mean_pres = asl_sector_mean(da, mask)
     threshold = sector_mean_pres
 
-    time_str = np.datetime_as_string(da.valid_time, unit='D')
+    # Converting to datetime and dropping hourly data, not required
+    datetime_values = pd.to_datetime(da.valid_time.values)
+    time_str = datetime_values.strftime('%Y-%m-%d')
 
     # fill land in with highest value to limit lows being found here
     da_max = da.max().values
