@@ -59,7 +59,7 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
 
     # Converting to datetime and dropping hourly data, not required
     datetime_values = pd.to_datetime(da.valid_time.values)
-    time_str = datetime_values.strftime('%Y-%m-%d')
+    time_str = datetime_values.strftime("%Y-%m-%d")
 
     # fill land in with highest value to limit lows being found here
     da_max = da.max().values
