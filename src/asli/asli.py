@@ -221,8 +221,7 @@ class ASLICalculator:
             ).lsm.squeeze()
         else:
             self.land_sea_mask = xr.open_dataset(
-                Path(self.data_dir, self.mask_filename),
-                engine = "netcdf4"
+                Path(self.data_dir, self.mask_filename)
             ).lsm.squeeze()
 
     def read_msl_data(self, include_era5t: bool=False):
