@@ -4,6 +4,7 @@ import argparse
 import datetime
 import logging
 import os
+import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Mapping, Union
 
@@ -220,7 +221,8 @@ class ASLICalculator:
             ).lsm.squeeze()
         else:
             self.land_sea_mask = xr.open_dataset(
-                Path(self.data_dir, self.mask_filename)
+                Path(self.data_dir, self.mask_filename),
+                engine = "netcdf4"
             ).lsm.squeeze()
 
     def read_msl_data(self, include_era5t: bool=False):
@@ -435,7 +437,7 @@ def _cli_common_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser
         "-o",
         "--output",
         type=str,
-        help="Output file path for CSV, relative to <datadir>.",
+        help="Output file path for file, relative to <datadir>.",
     )
     parser.add_argument(
         "msl_files",
@@ -460,6 +462,13 @@ def _get_cli_plot_args():
         nargs="?",
         type=str,
         help="Input CSV file, relative to <datadir>.",
+    )
+    parser.add_argument(
+        "-y",
+        "--year",
+        nargs="?",
+        type=int,
+        help="When present, plot only the year specified"
     )
     parser = _cli_common_args(parser)
 
@@ -499,8 +508,18 @@ def _cli_plot():
     a = ASLICalculator(args.datadir, args.mask, args.msl_files[0])
     a.read_mask_data()
     a.read_msl_data()
-    a.import_from_csv(args.input)
-    a.plot_region_all()
+    # Perform the calculation if no input file is provided
+    if args.input:
+        a.import_from_csv(args.input)
+    else:
+        a.calculate()    
+    # Plot all if no specific year is provided    
+    if args.year:
+        a.plot_region_year(args.year)
+    else:    
+        a.plot_region_all()
+    if args.output:
+        plt.savefig(os.path.join(args.datadir, args.output))
 
 def _cli_calc():
     """Command-line interface to ASL calculation."""
