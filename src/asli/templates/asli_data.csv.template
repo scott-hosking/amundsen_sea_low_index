@@ -10,8 +10,8 @@
 # latitude: -73.86 (degree_north)
 # longitude: -65.46 (degree_east)
 # Conventions: ACDD-1.3, CF-1.12, UCUM-2.2
-# time_coverage_start: 1959-01-01
-# time_coverage_end:
+# time_coverage_start: {{time_coverage_start}}
+# time_coverage_end: {{time_coverage_end}}
 # source: asli {{software_version}}
 # product_version: {{calculation_version}}
 # date_created: {{date_created}}

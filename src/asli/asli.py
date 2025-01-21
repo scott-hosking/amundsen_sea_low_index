@@ -347,7 +347,9 @@ class ASLICalculator:
         header = template.render(
             calculation_version=CALCULATION_VERSION,
             software_version=SOFTWARE_VERSION,
-            date_created=datetime.datetime.now().strftime("%Y%m%d")
+            date_created=datetime.datetime.now().strftime("%Y%m%d"),
+            time_coverage_start = self.asl_df['time'].min(),
+            time_coverage_end = self.asl_df['time'].max()
         )
 
         logger.info(f"Writing csv to {filepath}")
