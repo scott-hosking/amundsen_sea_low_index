@@ -347,7 +347,7 @@ class ASLICalculator:
         header = template.render(
             calculation_version=CALCULATION_VERSION,
             software_version=SOFTWARE_VERSION,
-            data_version=datetime.datetime.now().strftime("%Y%m%d"),
+            date_created=datetime.datetime.now().strftime("%Y%m%d"),
         )
 
         logger.info(f"Writing csv to {filepath}")

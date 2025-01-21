@@ -1,30 +1,23 @@
 {# This is a Jinja2 template #}
-# 
-# Amundsen Sea Low (ASL) Index version 3
-#   (derived from monthly ERA5 Reanalysis data)
-# 
-# Dr J. Scott Hosking
-#   British Antarctic Survey
-#   Twitter: @scotthosking
-# 
-# For more information see:
-#   Website: https://scotthosking.com/asl_index
-#   GitHub:  https://github.com/scotthosking/amundsen_sea_low_index
-# 
-# Column Labels:
-#   time       = YYYY-MM-01 (monthly data)
-#   SectorPres = Area-average sea level pressure over sector (170-298 E : 60-80 S)
-#   ActCenPres = Actual central pressure of ASL
-#   lon        = Longitudinal location of ASL (degrees East)
-#   lat        = Latitudinal location of ASL
-#   RelCenPres = Relative central pressure (ActCenPres 'minus' SectorPres)
-#   DataSource = ERA5 (final data) or ERA5T (initial release data) from ECMWF
-# 
-# The ASL (low pressure system) detection algorithm may be improved over time. Therefore 
-# it is recommended that the version number below is noted when using these data.
-#   ASLi_version_id = {{ calculation_version }}
-#   ASLi_software_version = {{ software_version }}
-#   data_version = {{ data_version }}
-# 
-# 
-
+# id: ASLI_DOI_PLACEHOLDER
+# title: Amundsen Sea Low (ASL) Index
+# keywords: "ATMOSPHERIC PRESSURE", "SEA LEVEL PRESSURE", SOUTHERN OCEAN", "POLAR", "Monthly - \u003c Annual", "Multi-Year", "CSV"
+# summary: Amundsen Sea Low (ASL) Index, derived from monthly ERA5 Reanalysis data.
+# The ASL (low pressure system) detection algorithm may be improved over time.
+# Therefore it is recommended that the version number below is noted when using these data.
+# authors: Dr J. Scott Hosking
+# institution: BAS (British Antarctic Survey).
+# creator_url: https://scotthosking.com/
+# latitude: -73.86 (degree_north)
+# longitude: -65.46 (degree_east)
+# Conventions: ACDD-1.3, CF-1.12, UCUM-2.2
+# time_coverage_start: 1959-01-01
+# time_coverage_end: {{}}
+# source: {{software_version}}
+# product_version: {{calculation_version}}
+# date_created: {{date_created}}
+# references: 10.24381/cds.adbb2d47
+# [a]: Area-average sea level pressure over sector (170-298 E : 60-80 S)
+# [b]: Relative central pressure (ActCenPres 'minus' SectorPres)
+# [c]: ERA5 (final data) or ERA5T (initial release data) from ECMWF
+time (monthly), sector_pressure (hPa) [a], actual_central_pressure (hPa), longitude (degree_east), latitude (degree_north), relative_central_pressure (hPa) [b], data_source [c]
