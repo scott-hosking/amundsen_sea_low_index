@@ -347,13 +347,13 @@ class ASLICalculator:
         header = template.render(
             calculation_version=CALCULATION_VERSION,
             software_version=SOFTWARE_VERSION,
-            date_created=datetime.datetime.now().strftime("%Y%m%d"),
+            date_created=datetime.datetime.now().strftime("%Y%m%d")
         )
 
         logger.info(f"Writing csv to {filepath}")
         with open(filepath, "w") as f:
             f.writelines(header)
-            self.asl_df.to_csv(f, index=False)
+            self.asl_df.to_csv(f, index=False, header=None)
 
 
     def import_from_csv(self, filename: Union[str, Path],force: bool = False):
