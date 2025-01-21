@@ -18,6 +18,6 @@
 # date_created: {{date_created}}
 # references: 10.24381/cds.adbb2d47
 # [a]: Area-average sea level pressure over sector (170-298 E : 60-80 S)
-# [b]: Relative central pressure (ActCenPres 'minus' SectorPres)
+# [b]: Relative central pressure (actual_central_pressure 'minus' sector_pressure)
 # [c]: ERA5 (final data) or ERA5T (initial release data) from ECMWF
 time (monthly), sector_pressure (hPa) [a], actual_central_pressure (hPa), longitude (degree_east), latitude (degree_north), relative_central_pressure (hPa) [b], data_source [c]

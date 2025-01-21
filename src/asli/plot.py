@@ -105,7 +105,7 @@ def plot_lows(
         ## mark ASL
         df2 = df[df["time"] == df.time.values[i]]
         if len(df2) > 0:
-            ax.plot(df2["lon"], df2["lat"], "mx", transform=ccrs.PlateCarree())
+            ax.plot(df2["longitude"], df2["latitude"], "mx", transform=ccrs.PlateCarree())
 
         if regionbox:
             draw_regional_box(regionbox)
