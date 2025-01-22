@@ -31,5 +31,5 @@
 # [a]: Area-average sea level pressure over sector
 # [b]: Relative central pressure (actual_central_pressure 'minus' sector_pressure)
 # [c]: ERA5 (final data) or ERA5T (initial release data) from ECMWF
-time (day), longitude (degree), latitude (degree), actual_central_pressure (hectopascal), sector_pressure (hectopascal) [a], relative_central_pressure (hectopascal) [b], data_source [c]
+time (day),longitude (degree),latitude (degree),actual_central_pressure (hectopascal),sector_pressure (hectopascal) [a],relative_central_pressure (hectopascal) [b],data_source [c]
 
