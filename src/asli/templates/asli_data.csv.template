@@ -1,6 +1,13 @@
 # id: ASLI_DOI_PLACEHOLDER
 # title: Amundsen Sea Low (ASL) Index
-# keywords: ATMOSPHERIC PRESSURE,SEA LEVEL PRESSURE,SOUTHERN OCEAN,POLAR,Monthly - \u003c Annual,Multi-Year,CSV
+# keywords: ATMOSPHERIC PRESSURE
+#: SEA LEVEL PRESSURE
+#: SOUTHERN OCEAN
+#: POLAR
+#: Monthly - \u003c
+#: Annual
+#: Multi-Year
+#: CSV
 # summary: Amundsen Sea Low (ASL) Index derived from monthly ERA5 Reanalysis data.
 # The ASL (low pressure system) detection algorithm may be improved over time.
 # Therefore it is recommended that the version number below is noted when using these data.
@@ -12,7 +19,8 @@
 # geospatial_lon_min: -62.0 (degree_east)
 # geospatial_lon_max: 170.0 (degree_east)
 # geospatial_bounds_crs: EPSG:4326
-# Conventions: ACDD-1.3, CF-1.12, UCUM-2.2
+# Conventions: ACDD-1.3
+#: CF-1.12
 # time_coverage_start: {{time_coverage_start}}
 # time_coverage_end: {{time_coverage_end}}
 # source: asli {{software_version}}
@@ -22,5 +30,5 @@
 # [a]: Area-average sea level pressure over sector
 # [b]: Relative central pressure (actual_central_pressure 'minus' sector_pressure)
 # [c]: ERA5 (final data) or ERA5T (initial release data) from ECMWF
-time (monthly), longitude (degree_east), latitude (degree_north), actual_central_pressure (hPa), sector_pressure (hPa) [a], relative_central_pressure (hPa) [b], data_source [c]
+time (d), longitude (degree_east), latitude (degree_north), actual_central_pressure (hPa), sector_pressure (hPa) [a], relative_central_pressure (hPa) [b], data_source [c]
 
