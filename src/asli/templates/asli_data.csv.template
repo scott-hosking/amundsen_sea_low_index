@@ -6,11 +6,12 @@
 # Therefore it is recommended that the version number below is noted when using these data.
 # authors: Dr J. Scott Hosking
 # institution: BAS (British Antarctic Survey).
-# creator_url: https://scotthosking.com/
+# creator_url: https://orcid.org/0000-0002-3646-3504
 # geospatial_lat_min: -80.0 (degree_north) 
 # geospatial_lat_max: -60.0 (degree_north)
 # geospatial_lon_min: -62.0 (degree_east)
 # geospatial_lon_max: 170.0 (degree_east)
+# geospatial_bounds_crs: EPSG:4326
 # Conventions: ACDD-1.3, CF-1.12, UCUM-2.2
 # time_coverage_start: {{time_coverage_start}}
 # time_coverage_end: {{time_coverage_end}}
