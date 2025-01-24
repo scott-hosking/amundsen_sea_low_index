@@ -40,13 +40,14 @@ def asl_sector_mean(
     )
 
 
-def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
+def get_lows(da: xr.DataArray, mask: xr.DataArray, minima: int = 3) -> pd.DataFrame:
     """
     Finds local minima in data array da, ignoring land from land-sea mask, mask.
 
     Args:
         da (xr.DataArray): data array containing mean sea level pressure fields.
-        mask (xr.DataArray): data array containing land-sea mask
+        mask (xr.DataArray): data array containing land-sea mask.
+        minima (int): Max number of minima to locate in pressure field per time step. Default: 3
 
     Returns:
         pd.DataFrame: containing columns 'time','lon','lat','ActCenPres','SectorPres','RelCenPres'
@@ -77,7 +78,7 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
     minima_yx = skimage.feature.peak_local_max(
         invert_data,  # input data
         min_distance=5,  # peaks are separated by at least min_distance
-        num_peaks=3,  # maximum number of peaks
+        num_peaks=minima,  # maximum number of peaks
         exclude_border=False,  # excludes peaks from within min_distance pixels of the border
         threshold_abs=threshold_abs,  # minimum intensity of peaks
     )
@@ -108,17 +109,17 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
     return df
 
 
-def _get_lows_by_time(da: xr.DataArray, slice_by: str, t: int, mask: xr.DataArray):
+def _get_lows_by_time(da: xr.DataArray, slice_by: str, t: int, mask: xr.DataArray, minima: int):
     if slice_by == "season":
         da_t = da.isel(season=t)
     elif slice_by == "valid_time":
         da_t = da.isel(valid_time=t)
 
-    return get_lows(da_t, mask)
+    return get_lows(da_t, mask, minima=minima)
 
 
 def define_minima_per_time_in_region(
-    df: pd.DataFrame, region: Mapping[str, float] = ASL_REGION
+    df: pd.DataFrame, region: Mapping[str, float] = ASL_REGION, output_all_minima: bool = False
 ) -> pd.DataFrame:
     """
     From a dataframe of multiple minima per time period, selects the lowest minimum within each time period,
@@ -132,8 +133,9 @@ def define_minima_per_time_in_region(
         & (df["lat"] < region["north"])
     ]
 
-    ### For each time, get the row with the lowest minima_number
-    df2 = df2.loc[df2.groupby("time")["ActCenPres"].idxmin()]
+    if not output_all_minima:
+        ### For each time, get the row with the lowest minima_number
+        df2 = df2.loc[df2.groupby("time")["ActCenPres"].idxmin()]
 
     df2 = df2.reset_index(drop=True)
 
@@ -285,12 +287,14 @@ class ASLICalculator:
         self.read_mask_data()
         self.read_msl_data(include_era5t)
 
-    def calculate(self, n_jobs: int = 1) -> pd.DataFrame:
+    def calculate(self, n_jobs: int = 1, output_all_minima: bool = False, minima: int = 3) -> pd.DataFrame:
         """
         From loaded mean sea level pressure data and land-sea mask, runs the calculation of minima.
 
         Args:
             n_jobs (int, optional): Number of processes to use for parallel calculation. Defaults to 1.
+            output_all_minima (bool, optional): Default : False, only output one minimum per time.
+            minima (int, optimal): Max number of minima to locate in pressure field per time step. Default: 3.
 
         Returns:
             pd.DataFrame: dataframe containing locations of pressure minima, mean pressure.
@@ -309,14 +313,14 @@ class ASLICalculator:
         with tqdm_joblib(tqdm(total=ntime)) as progress_bar:
             lows_per_time = joblib.Parallel(n_jobs=n_jobs)(
                 joblib.delayed(_get_lows_by_time)(
-                    self.sliced_msl, slice_by, t, self.land_sea_mask
+                    self.sliced_msl, slice_by, t, self.land_sea_mask, minima
                 )
                 for t in range(ntime)
             )
 
         self.all_lows_dfs = pd.concat(lows_per_time, ignore_index=True)
 
-        self.asl_df = define_minima_per_time_in_region(self.all_lows_dfs)
+        self.asl_df = define_minima_per_time_in_region(self.all_lows_dfs, output_all_minima=output_all_minima)
         return self.asl_df
 
     def to_csv(self, filename: str) -> None:
@@ -488,6 +492,20 @@ def _get_cli_calc_args():
         default=1,
         help="Number of processes used by joblib in parallel calculation.",
     )
+    parser.add_argument(
+        "-M",
+        "--minima",
+        type=int,
+        nargs="?",
+        default=3,
+        help="Max number of minima to locate in pressure field per time step."
+    )
+    parser.add_argument(
+        "-a",
+        "--all-minima",
+        action="store_true",
+        help="When present, this flag enables the output of all minima found."
+    )
     
     return parser.parse_args()
 
@@ -510,7 +528,7 @@ def _cli_calc():
     a = ASLICalculator(args.datadir, args.mask, args.msl_files[0])
     a.read_mask_data()
     a.read_msl_data(include_era5t=args.era5t)
-    a.calculate(args.numjobs)
+    a.calculate(args.numjobs, output_all_minima=args.all_minima, minima=args.minima)
 
     if args.output:
         a.to_csv(args.output)
