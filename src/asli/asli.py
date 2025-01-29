@@ -49,7 +49,7 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
         mask (xr.DataArray): data array containing land-sea mask
 
     Returns:
-        pd.DataFrame: containing columns 'time','lon','lat','ActCenPres','SectorPres','RelCenPres'
+        pd.DataFrame: containing columns 'time','longitude','latitude','actual_central_pressure','sector_pressure','relative_central_pressure'
     """
 
     lons, lats = da.longitude.values, da.latitude.values
@@ -89,18 +89,18 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
         pressure.append(da.values[minima[0], minima[1]])
 
     df = pd.DataFrame()
-    df["lat"] = minima_lat
-    df["lon"] = minima_lon
-    df["ActCenPres"] = pressure
-    df["SectorPres"] = sector_mean_pres
+    df["latitude"] = minima_lat
+    df["longitude"] = minima_lon
+    df["actual_central_pressure"] = pressure
+    df["sector_pressure"] = sector_mean_pres
     df["time"] = time_str
     df["DataSource"] = "ERA5T" if da.expver.values == "0005" else "ERA5"
 
     ### Add relative central pressure (Hosking et al. 2013)
-    df["RelCenPres"] = df["ActCenPres"] - df["SectorPres"]
+    df["relative_central_pressure"] = df["actual_central_pressure"] - df["sector_pressure"]
 
     ### re-order columns
-    df = df[["time", "lon", "lat", "ActCenPres", "SectorPres", "RelCenPres", "DataSource"]]
+    df = df[["time", "longitude", "latitude", "actual_central_pressure", "sector_pressure", "relative_central_pressure", "DataSource"]]
 
     ### clean-up DataFrame
     df = df.reset_index(drop=True)
@@ -126,14 +126,14 @@ def define_minima_per_time_in_region(
     """
     ### select only those points within ASL box
     df2 = df[
-        (df["lon"] > region["west"])
-        & (df["lon"] < region["east"])
-        & (df["lat"] > region["south"])
-        & (df["lat"] < region["north"])
+        (df["longitude"] > region["west"])
+        & (df["longitude"] < region["east"])
+        & (df["latitude"] > region["south"])
+        & (df["latitude"] < region["north"])
     ]
 
     ### For each time, get the row with the lowest minima_number
-    df2 = df2.loc[df2.groupby("time")["ActCenPres"].idxmin()]
+    df2 = df2.loc[df2.groupby("time")["actual_central_pressure"].idxmin()]
 
     df2 = df2.reset_index(drop=True)
 
@@ -347,13 +347,15 @@ class ASLICalculator:
         header = template.render(
             calculation_version=CALCULATION_VERSION,
             software_version=SOFTWARE_VERSION,
-            data_version=datetime.datetime.now().strftime("%Y%m%d"),
+            date_created=datetime.datetime.now().strftime("%Y%m%d"),
+            time_coverage_start = self.asl_df['time'].min(),
+            time_coverage_end = self.asl_df['time'].max()
         )
 
         logger.info(f"Writing csv to {filepath}")
         with open(filepath, "w") as f:
             f.writelines(header)
-            self.asl_df.to_csv(f, index=False)
+            self.asl_df.to_csv(f, index=False, header=None)
 
 
     def import_from_csv(self, filename: Union[str, Path],force: bool = False):
