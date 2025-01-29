@@ -1,4 +1,4 @@
-# id: ASLI_DOI_PLACEHOLDER
+# id: asli_{{calculation_version}}_{{date_created}}
 # title: Amundsen Sea Low (ASL) Index
 # keywords: ATMOSPHERIC PRESSURE
 #: SEA LEVEL PRESSURE
