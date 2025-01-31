@@ -360,11 +360,7 @@ class ASLICalculator:
             self.asl_df.to_csv(f, index=False, header=None)
 
 
-<<<<<<< Updated upstream
-    def import_from_csv(self, filename: Union[str, Path],force: bool = False):
-=======
     def import_from_csv(self, filename: Union[str, Path], header: int = 33, force: bool = False):
->>>>>>> Stashed changes
         """
         Import a csv file exported from the .export_df method, for example to plot data from a previous session.
 
@@ -386,10 +382,10 @@ class ASLICalculator:
             
             self.asl_df = pd.read_csv(
                 s3.open('{}/{}'.format(self.data_dir, filename), mode='rb'),
-                header=33
+                header=header
                 )
         else:
-            self.asl_df = pd.read_csv(filepath, header=33)
+            self.asl_df = pd.read_csv(filepath, header=header)
 
         self.asl_df.rename(
             columns={'time (mo)': 'time',
