@@ -7,6 +7,7 @@ import os
 import matplotlib.pyplot as plt
 from pathlib import Path
 from typing import Mapping, Union
+import warnings
 
 import joblib
 import pandas as pd
@@ -359,7 +360,11 @@ class ASLICalculator:
             self.asl_df.to_csv(f, index=False, header=None)
 
 
+<<<<<<< Updated upstream
     def import_from_csv(self, filename: Union[str, Path],force: bool = False):
+=======
+    def import_from_csv(self, filename: Union[str, Path], header: int = 33, force: bool = False):
+>>>>>>> Stashed changes
         """
         Import a csv file exported from the .export_df method, for example to plot data from a previous session.
 
@@ -368,7 +373,7 @@ class ASLICalculator:
             force (bool, optional): Overwrite existing calculations in this object. Defaults to False.
         """
         if self.asl_df is not None and not force:
-            logger.warn("Calculation dataframe has existing values, set force=True to overwrite with import.")
+            warnings.warn("Calculation dataframe has existing values, set force=True to overwrite with import.")
             return
 
         filepath = os.path.join(self.data_dir, filename)
@@ -385,6 +390,16 @@ class ASLICalculator:
                 )
         else:
             self.asl_df = pd.read_csv(filepath, header=33)
+
+        self.asl_df.rename(
+            columns={'time (mo)': 'time',
+                     'longitude (degree)': 'longitude',
+                     'latitude (degree)': 'latitude',
+                     'actual_central_pressure (hPA)': 'ActCenPres',
+                     'sector_pressure (hPA)': 'SectPres',
+                     'relative_central_pressure (hPA) [b]': 'RelCenPres',
+                     },
+            inplace=True)
 
 
     def plot_region_all(self):
