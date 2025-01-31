@@ -373,12 +373,13 @@ class ASLICalculator:
             self.asl_df.to_csv(f, index=False)
 
 
-    def import_from_csv(self, filename: Union[str, Path],force: bool = False):
+    def import_from_csv(self, filename: Union[str, Path], header: int = 28, force: bool = False):
         """
         Import a csv file exported from the .export_df method, for example to plot data from a previous session.
 
         Args:
             filename (str|Path, required): Path to csv file containing ASL dataframe.
+            header (int, optional): number of header rows in csv. Default: 28
             force (bool, optional): Overwrite existing calculations in this object. Defaults to False.
         """
         if self.asl_df is not None and not force:
@@ -395,21 +396,21 @@ class ASLICalculator:
             
             self.asl_df = pd.read_csv(
                 s3.open('{}/{}'.format(self.data_dir, filename), mode='rb'),
-                header=28
+                header=header
                 )
         else:
-            self.asl_df = pd.read_csv(filepath, header=28)
+            self.asl_df = pd.read_csv(filepath, header=header)
 
 
-    def plot_region_all(self):
+    def plot_region_all(self, **kwargs):
         """Plots mean sea level pressure fields for the Amundsen Sea with identified low pressure and bounding box."""
 
         if self.asl_df is None:
             raise Warning(f"ASL calculation dataframe is {self.as_df}, can not plot. \
                           Try running .calculate() first.")
-        plot_lows(self.masked_msl_data, self.asl_df, regionbox=ASL_REGION)
+        plot_lows(self.masked_msl_data, self.asl_df, regionbox=ASL_REGION, **kwargs)
 
-    def plot_region_year(self, year: int):
+    def plot_region_year(self, year: int, **kwargs):
         """As for plot_region_all but selects only year
 
         Args:
@@ -427,7 +428,7 @@ class ASLICalculator:
             self.asl_df.time >= str(year)+"-01-01") & (self.asl_df.time <= str(year)+"-12-01"
         )]
 
-        plot_lows(da, df, regionbox=ASL_REGION)
+        return plot_lows(da, df, regionbox=ASL_REGION, **kwargs)
 
 
 def _cli_common_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
