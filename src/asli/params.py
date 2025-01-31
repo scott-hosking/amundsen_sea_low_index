@@ -17,6 +17,3 @@ ASL_REGION = MappingProxyType(
 
 # Threshold for land-sea mask percentage land per pixel
 MASK_THRESHOLD = 0.5
-
-# Default threshold of whether to warn for multiple pressure minima within percentage
-PRESSURE_MINIMA_THRESHOLD = 1

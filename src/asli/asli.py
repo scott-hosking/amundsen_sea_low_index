@@ -13,7 +13,7 @@ import skimage
 from tqdm import tqdm
 import xarray as xr
 
-from .params import ASL_REGION, CALCULATION_VERSION, SOFTWARE_VERSION, MASK_THRESHOLD, PRESSURE_MINIMA_THRESHOLD
+from .params import ASL_REGION, CALCULATION_VERSION, SOFTWARE_VERSION, MASK_THRESHOLD
 from .plot import plot_lows
 from .utils import tqdm_joblib, configure_s3_bucket
 
@@ -43,7 +43,6 @@ def asl_sector_mean(
 def get_lows(da: xr.DataArray,
              mask: xr.DataArray,
              minima: int = 3,
-             minima_pc_threshold: float = PRESSURE_MINIMA_THRESHOLD
              ) -> pd.DataFrame:
     """
     Finds local minima in data array da, ignoring land from land-sea mask, mask.
@@ -52,7 +51,6 @@ def get_lows(da: xr.DataArray,
         da (xr.DataArray): data array containing mean sea level pressure fields.
         mask (xr.DataArray): data array containing land-sea mask.
         minima (int): Max number of minima to locate in pressure field per time step. Default: 3
-        minima_pc_threshold (float): If any successive minima found fall within this percentage of the lowest minima, a warning will be raised. Default: 5.0
 
     Returns:
         pd.DataFrame: containing columns 'time','lon','lat','ActCenPres','SectorPres','RelCenPres'
@@ -94,13 +92,6 @@ def get_lows(da: xr.DataArray,
         minima_lon.append(lons[minima[1]])
         pressure.append(da.values[minima[0], minima[1]])
 
-    if len(pressure) > 1:
-        min_pressure = min(pressure)        
-        threshold_decimal = minima_pc_threshold*0.01
-        for p in pressure:
-            if (abs(min_pressure - p)/min_pressure) < threshold_decimal and p != min_pressure:
-                logger.warning(f"Pressure within threshold value of {minima_pc_threshold}% of minimum pressure: {min_pressure}hPa found: {p}hPa for {time_str}.")
-
     df = pd.DataFrame()
     df["lat"] = minima_lat
     df["lon"] = minima_lon
@@ -121,13 +112,13 @@ def get_lows(da: xr.DataArray,
     return df
 
 
-def _get_lows_by_time(da: xr.DataArray, slice_by: str, t: int, mask: xr.DataArray, minima: int, minima_pc_threshold: float = PRESSURE_MINIMA_THRESHOLD):
+def _get_lows_by_time(da: xr.DataArray, slice_by: str, t: int, mask: xr.DataArray, minima: int):
     if slice_by == "season":
         da_t = da.isel(season=t)
     elif slice_by == "valid_time":
         da_t = da.isel(valid_time=t)
 
-    return get_lows(da_t, mask, minima=minima, minima_pc_threshold=minima_pc_threshold)
+    return get_lows(da_t, mask, minima=minima)
 
 
 def define_minima_per_time_in_region(
@@ -299,7 +290,7 @@ class ASLICalculator:
         self.read_mask_data()
         self.read_msl_data(include_era5t)
 
-    def calculate(self, n_jobs: int = 1, output_all_minima: bool = False, minima: int = 3, minima_pc_threshold: float = PRESSURE_MINIMA_THRESHOLD) -> pd.DataFrame:
+    def calculate(self, n_jobs: int = 1, output_all_minima: bool = False, num_minima: int = 3) -> pd.DataFrame:
         """
         From loaded mean sea level pressure data and land-sea mask, runs the calculation of minima.
 
@@ -307,7 +298,6 @@ class ASLICalculator:
             n_jobs (int, optional): Number of processes to use for parallel calculation. Defaults to 1.
             output_all_minima (bool, optional): Default : False, only output one minimum per time.
             minima (int, optimal): Max number of minima to locate in pressure field per time step. Default: 3.
-            minima_pc_threshold (float): If any successive minima found fall within this percentage of the lowest minima, a warning will be raised. Default: 5.0
 
         Returns:
             pd.DataFrame: dataframe containing locations of pressure minima, mean pressure.
@@ -326,7 +316,7 @@ class ASLICalculator:
         with tqdm_joblib(tqdm(total=ntime)) as progress_bar:
             lows_per_time = joblib.Parallel(n_jobs=n_jobs)(
                 joblib.delayed(_get_lows_by_time)(
-                    self.sliced_msl, slice_by, t, self.land_sea_mask, minima, minima_pc_threshold
+                    self.sliced_msl, slice_by, t, self.land_sea_mask, num_minima,
                 )
                 for t in range(ntime)
             )
@@ -520,14 +510,6 @@ def _get_cli_calc_args():
         action="store_true",
         help="When present, this flag enables the output of all minima found."
     )
-    parser.add_argument(
-        "-T",
-        "--minima-threshold",
-        type=float,
-        nargs="?",
-        default=PRESSURE_MINIMA_THRESHOLD,
-        help=f"If any successive minima found fall within this percentage of the lowest minima, a warning will be raised. Default: {PRESSURE_MINIMA_THRESHOLD}"
-    )
     
     return parser.parse_args()
 
@@ -550,7 +532,7 @@ def _cli_calc():
     a = ASLICalculator(args.datadir, args.mask, args.msl_files[0])
     a.read_mask_data()
     a.read_msl_data(include_era5t=args.era5t)
-    a.calculate(args.numjobs, output_all_minima=args.all_minima, minima=args.minima, minima_pc_threshold=args.minima_threshold)
+    a.calculate(args.numjobs, output_all_minima=args.all_minima, num_minima=args.minima)
 
     if args.output:
         a.to_csv(args.output)
