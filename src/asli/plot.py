@@ -2,6 +2,7 @@
 
 import cartopy.crs as ccrs
 import pandas as pd
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
@@ -57,6 +58,8 @@ def plot_lows(
     border: int = 10,
     regionbox: dict = ASL_REGION,
     coastlines: bool = False,
+    point_color: str = "k",
+    point_cmap: str = "gray",
 ):
     plt.figure(figsize=(20, 15))
 
@@ -103,9 +106,20 @@ def plot_lows(
         ax.set_title(df.time.values[i])
 
         ## mark ASL
-        df2 = df[df["time"] == df.time.values[i]]
-        if len(df2) > 0:
-            ax.plot(df2["lon"], df2["lat"], "mx", transform=ccrs.PlateCarree())
+        time = pd.to_datetime(da_2D.valid_time.values)
+        time_str = time.strftime('%Y-%m-%d')
+        df2 = df[df["time"] == time_str]
+        df2.reset_index(inplace=True)
+        num_points = len(df2)
+        if num_points > 1:
+            # for more than one point, color them in sequence using a colormap
+            point_colormap = matplotlib.colormaps[point_cmap].resampled(num_points)
+            point_color_list = point_colormap(np.linspace(0, 1, num_points))
+        else:
+            # for a single point, use single color
+            point_color_list = [point_color]
+        for i in range(num_points):
+            ax.plot(df2["lon"][i], df2["lat"][i], color=point_color_list[i], marker="x", transform=ccrs.PlateCarree())
 
         if regionbox:
             draw_regional_box(regionbox)
