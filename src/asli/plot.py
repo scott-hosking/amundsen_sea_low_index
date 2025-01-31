@@ -134,7 +134,7 @@ def plot_lows(
             # for a single point, use single color
             point_color_list = [point_color]
         for i in range(num_points):
-            ax.plot(df2["lon"][i], df2["lat"][i], color=point_color_list[i], marker="x", transform=ccrs.PlateCarree())
+            ax.plot(df2["longitude"][i], df2["latitude"][i], color=point_color_list[i], marker="x", transform=ccrs.PlateCarree())
 
         if regionbox:
             draw_regional_box(regionbox)
