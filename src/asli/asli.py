@@ -381,10 +381,10 @@ class ASLICalculator:
             
             self.asl_df = pd.read_csv(
                 s3.open('{}/{}'.format(self.data_dir, filename), mode='rb'),
-                header=28
+                header=33
                 )
         else:
-            self.asl_df = pd.read_csv(filepath, header=28)
+            self.asl_df = pd.read_csv(filepath, header=33)
 
 
     def plot_region_all(self):
