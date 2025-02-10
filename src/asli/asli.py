@@ -42,7 +42,7 @@ def asl_sector_mean(
 
 def get_lows(da: xr.DataArray,
              mask: xr.DataArray,
-             minima: int = 3,
+             minima: int = 1,
              ) -> pd.DataFrame:
     """
     Finds local minima in data array da, ignoring land from land-sea mask, mask.
@@ -50,7 +50,7 @@ def get_lows(da: xr.DataArray,
     Args:
         da (xr.DataArray): data array containing mean sea level pressure fields.
         mask (xr.DataArray): data array containing land-sea mask.
-        minima (int): Max number of minima to locate in pressure field per time step. Default: 3
+        minima (int): Max number of minima to locate in pressure field per time step. Default: 1
 
     Returns:
         pd.DataFrame: containing columns 'time','longitude','latitude','actual_central_pressure','sector_pressure','relative_central_pressure'
@@ -289,14 +289,13 @@ class ASLICalculator:
         self.read_mask_data()
         self.read_msl_data(include_era5t)
 
-    def calculate(self, n_jobs: int = 1, output_all_minima: bool = False, num_minima: int = 3) -> pd.DataFrame:
+    def calculate(self, n_jobs: int = 1, num_minima: int = 1) -> pd.DataFrame:
         """
         From loaded mean sea level pressure data and land-sea mask, runs the calculation of minima.
 
         Args:
             n_jobs (int, optional): Number of processes to use for parallel calculation. Defaults to 1.
-            output_all_minima (bool, optional): Default : False, only output one minimum per time.
-            minima (int, optimal): Max number of minima to locate in pressure field per time step. Default: 3.
+            minima (int, optimal): Max number of minima to locate in pressure field per time step. Default: 1.
 
         Returns:
             pd.DataFrame: dataframe containing locations of pressure minima, mean pressure.
@@ -502,14 +501,8 @@ def _get_cli_calc_args():
         "--minima",
         type=int,
         nargs="?",
-        default=3,
+        default=1,
         help="Max number of minima to locate in pressure field per time step."
-    )
-    parser.add_argument(
-        "-a",
-        "--all-minima",
-        action="store_true",
-        help="When present, this flag enables the output of all minima found."
     )
     
     return parser.parse_args()
@@ -533,7 +526,7 @@ def _cli_calc():
     a = ASLICalculator(args.datadir, args.mask, args.msl_files[0])
     a.read_mask_data()
     a.read_msl_data(include_era5t=args.era5t)
-    a.calculate(args.numjobs, output_all_minima=args.all_minima, num_minima=args.minima)
+    a.calculate(args.numjobs, num_minima=args.minima)
 
     if args.output:
         a.to_csv(args.output)
