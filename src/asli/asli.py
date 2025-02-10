@@ -41,13 +41,17 @@ def asl_sector_mean(
     )
 
 
-def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
+def get_lows(da: xr.DataArray,
+             mask: xr.DataArray,
+             minima: int = 1,
+             ) -> pd.DataFrame:
     """
     Finds local minima in data array da, ignoring land from land-sea mask, mask.
 
     Args:
         da (xr.DataArray): data array containing mean sea level pressure fields.
-        mask (xr.DataArray): data array containing land-sea mask
+        mask (xr.DataArray): data array containing land-sea mask.
+        minima (int): Max number of minima to locate in pressure field per time step. Default: 1
 
     Returns:
         pd.DataFrame: containing columns 'time','longitude','latitude','actual_central_pressure','sector_pressure','relative_central_pressure'
@@ -78,7 +82,7 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
     minima_yx = skimage.feature.peak_local_max(
         invert_data,  # input data
         min_distance=5,  # peaks are separated by at least min_distance
-        num_peaks=3,  # maximum number of peaks
+        num_peaks=minima,  # maximum number of peaks
         exclude_border=False,  # excludes peaks from within min_distance pixels of the border
         threshold_abs=threshold_abs,  # minimum intensity of peaks
     )
@@ -109,17 +113,17 @@ def get_lows(da: xr.DataArray, mask: xr.DataArray) -> pd.DataFrame:
     return df
 
 
-def _get_lows_by_time(da: xr.DataArray, slice_by: str, t: int, mask: xr.DataArray):
+def _get_lows_by_time(da: xr.DataArray, slice_by: str, t: int, mask: xr.DataArray, minima: int):
     if slice_by == "season":
         da_t = da.isel(season=t)
     elif slice_by == "valid_time":
         da_t = da.isel(valid_time=t)
 
-    return get_lows(da_t, mask)
+    return get_lows(da_t, mask, minima=minima)
 
 
 def define_minima_per_time_in_region(
-    df: pd.DataFrame, region: Mapping[str, float] = ASL_REGION
+    df: pd.DataFrame, region: Mapping[str, float] = ASL_REGION, output_all_minima: bool = False
 ) -> pd.DataFrame:
     """
     From a dataframe of multiple minima per time period, selects the lowest minimum within each time period,
@@ -133,8 +137,8 @@ def define_minima_per_time_in_region(
         & (df["latitude"] < region["north"])
     ]
 
-    ### For each time, get the row with the lowest minima_number
-    df2 = df2.loc[df2.groupby("time")["actual_central_pressure"].idxmin()]
+    if not output_all_minima:
+        df2 = df2.loc[df2.groupby("time")["actual_central_pressure"].idxmin()]
 
     df2 = df2.reset_index(drop=True)
 
@@ -286,12 +290,13 @@ class ASLICalculator:
         self.read_mask_data()
         self.read_msl_data(include_era5t)
 
-    def calculate(self, n_jobs: int = 1) -> pd.DataFrame:
+    def calculate(self, n_jobs: int = 1, num_minima: int = 1) -> pd.DataFrame:
         """
         From loaded mean sea level pressure data and land-sea mask, runs the calculation of minima.
 
         Args:
             n_jobs (int, optional): Number of processes to use for parallel calculation. Defaults to 1.
+            minima (int, optimal): Max number of minima to locate in pressure field per time step. Default: 1.
 
         Returns:
             pd.DataFrame: dataframe containing locations of pressure minima, mean pressure.
@@ -310,14 +315,14 @@ class ASLICalculator:
         with tqdm_joblib(tqdm(total=ntime)) as progress_bar:
             lows_per_time = joblib.Parallel(n_jobs=n_jobs)(
                 joblib.delayed(_get_lows_by_time)(
-                    self.sliced_msl, slice_by, t, self.land_sea_mask
+                    self.sliced_msl, slice_by, t, self.land_sea_mask, num_minima,
                 )
                 for t in range(ntime)
             )
 
         self.all_lows_dfs = pd.concat(lows_per_time, ignore_index=True)
 
-        self.asl_df = define_minima_per_time_in_region(self.all_lows_dfs)
+        self.asl_df = define_minima_per_time_in_region(self.all_lows_dfs, output_all_minima=output_all_minima)
         return self.asl_df
 
     def to_csv(self, filename: str) -> None:
@@ -359,12 +364,13 @@ class ASLICalculator:
             self.asl_df.to_csv(f, index=False, header=None)
 
 
-    def import_from_csv(self, filename: Union[str, Path],force: bool = False):
+    def import_from_csv(self, filename: Union[str, Path], header: int = 28, force: bool = False):
         """
         Import a csv file exported from the .export_df method, for example to plot data from a previous session.
 
         Args:
             filename (str|Path, required): Path to csv file containing ASL dataframe.
+            header (int, optional): number of header rows in csv. Default: 28
             force (bool, optional): Overwrite existing calculations in this object. Defaults to False.
         """
         if self.asl_df is not None and not force:
@@ -381,21 +387,21 @@ class ASLICalculator:
             
             self.asl_df = pd.read_csv(
                 s3.open('{}/{}'.format(self.data_dir, filename), mode='rb'),
-                header=33
+                header=header
                 )
         else:
-            self.asl_df = pd.read_csv(filepath, header=33)
+            self.asl_df = pd.read_csv(filepath, header=header)
 
 
-    def plot_region_all(self):
+    def plot_region_all(self, **kwargs):
         """Plots mean sea level pressure fields for the Amundsen Sea with identified low pressure and bounding box."""
 
         if self.asl_df is None:
             raise Warning(f"ASL calculation dataframe is {self.as_df}, can not plot. \
                           Try running .calculate() first.")
-        plot_lows(self.masked_msl_data, self.asl_df, regionbox=ASL_REGION)
+        plot_lows(self.masked_msl_data, self.asl_df, regionbox=ASL_REGION, **kwargs)
 
-    def plot_region_year(self, year: int):
+    def plot_region_year(self, year: int, **kwargs):
         """As for plot_region_all but selects only year
 
         Args:
@@ -413,7 +419,7 @@ class ASLICalculator:
             self.asl_df.time >= str(year)+"-01-01") & (self.asl_df.time <= str(year)+"-12-01"
         )]
 
-        plot_lows(da, df, regionbox=ASL_REGION)
+        return plot_lows(da, df, regionbox=ASL_REGION, **kwargs)
 
 
 def _cli_common_args(parser: argparse.ArgumentParser) -> argparse.ArgumentParser:
@@ -498,6 +504,14 @@ def _get_cli_calc_args():
         default=1,
         help="Number of processes used by joblib in parallel calculation.",
     )
+    parser.add_argument(
+        "-M",
+        "--minima",
+        type=int,
+        nargs="?",
+        default=1,
+        help="Max number of minima to locate in pressure field per time step."
+    )
     
     return parser.parse_args()
 
@@ -530,7 +544,7 @@ def _cli_calc():
     a = ASLICalculator(args.datadir, args.mask, args.msl_files[0])
     a.read_mask_data()
     a.read_msl_data(include_era5t=args.era5t)
-    a.calculate(args.numjobs)
+    a.calculate(args.numjobs, num_minima=args.minima)
 
     if args.output:
         a.to_csv(args.output)
