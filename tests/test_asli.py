@@ -38,7 +38,7 @@ class TestASLICalculator(unittest.TestCase):
 
         assert a.asl_df == None
 
-        a.calculate(num_minima=1)
+        a.calculate()
         assert isinstance(a.asl_df, pd.DataFrame)
         assert a.asl_df.shape == (11, 7)
 
