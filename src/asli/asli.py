@@ -15,7 +15,7 @@ import skimage
 from tqdm import tqdm
 import xarray as xr
 
-from .params import ASL_REGION, CALCULATION_VERSION, SOFTWARE_VERSION, MASK_THRESHOLD
+from .params import ASL_REGION, CALCULATION_VERSION, SOFTWARE_VERSION, MASK_THRESHOLD, OUTPUT_ALL_MINIMA
 from .plot import plot_lows
 from .utils import tqdm_joblib, configure_s3_bucket
 
@@ -323,7 +323,7 @@ class ASLICalculator:
 
         self.all_lows_dfs = pd.concat(lows_per_time, ignore_index=True)
 
-        self.asl_df = define_minima_per_time_in_region(self.all_lows_dfs, output_all_minima=output_all_minima)
+        self.asl_df = define_minima_per_time_in_region(self.all_lows_dfs, output_all_minima=OUTPUT_ALL_MINIMA)
         return self.asl_df
 
     def to_csv(self, filename: str) -> None:
