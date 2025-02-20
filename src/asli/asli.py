@@ -124,7 +124,7 @@ def _get_lows_by_time(da: xr.DataArray, slice_by: str, t: int, mask: xr.DataArra
 
 
 def define_minima_per_time_in_region(
-    df: pd.DataFrame, region: Mapping[str, float] = ASL_REGION,
+    df: pd.DataFrame, region: Mapping[str, float] = ASL_REGION, output_all_minima: bool = False
 ) -> pd.DataFrame:
     """
     From a dataframe of multiple minima per time period, selects the lowest minimum within each time period,
@@ -137,6 +137,9 @@ def define_minima_per_time_in_region(
         & (df["latitude"] > region["south"])
         & (df["latitude"] < region["north"])
     ]
+
+    if not output_all_minima:
+        df2 = df2.loc[df2.groupby("time")["actual_central_pressure"].idxmin()]
 
     df2 = df2.reset_index(drop=True)
 
