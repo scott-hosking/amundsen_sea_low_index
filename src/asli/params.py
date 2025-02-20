@@ -15,7 +15,5 @@ ASL_REGION = MappingProxyType(
     {"west": 170.0, "east": 298.0, "south": -80.0, "north": -60.0}
 )
 
-OUTPUT_ALL_MINIMA = False
-
 # Threshold for land-sea mask percentage land per pixel
 MASK_THRESHOLD = 0.5
